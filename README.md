@@ -26,3 +26,45 @@ random-user-picker/
 ├── .gitignore
 ├── README.md
 └── requirements.txt     # Python dependencies
+```
+## Installation & Local Setup
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/Stevesbitz/picker-pro
+cd picker-pro
+```
+
+### 2. Create and activate a virtual environment
+#### macOS / Linux:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+#### Windows (Command Prompt):
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+#### Windows (PowerShell):
+```bash
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+
+### 3. Install project dependencies
+```bash
+pip install -r requirements.txt
+```
+
+## Running the Application
+
+### Start the server with live reloading
+```bash
+uvicorn app.main:app --reload
+```
+Web Application: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+
+Swagger API Docs: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
