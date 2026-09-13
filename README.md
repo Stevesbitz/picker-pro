@@ -1,4 +1,4 @@
-# Random User Picker
+# pickrPro
 
 A lightweight, high-performance web application for fair, round-robin random selection. Built using FastAPI and responsive HTML5/CSS3, state is synced server-side across all active clients in real-time.
 
