@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Random User Picker</title>
+<title>pickrPro®</title>
 <style>
   :root {
     --bg: #0f172a;
@@ -138,25 +138,26 @@
   }
   .remove-btn:hover { background: rgba(239, 68, 68, 0.15); }
 
-  .result {
-    text-align: center;
-    padding: 1.5rem 1rem;
+  .result-box {
     border-radius: 12px;
     background: linear-gradient(135deg, var(--accent), #8b5cf6);
-    font-size: 1.4rem;
-    font-weight: 700;
+    padding: 1.25rem 1rem;
+    text-align: center;
     margin-bottom: 1.25rem;
-    min-height: 1.8rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
-  .result.empty {
+  .result-box.empty {
     background: var(--card);
     border: 1px dashed var(--border);
     color: var(--muted);
-    font-size: 1rem;
-    font-weight: 400;
+  }
+  .result-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+  .result-time {
+    font-size: 0.8rem;
+    margin-top: 0.35rem;
+    opacity: 0.85;
   }
 
   .controls-row {
@@ -191,9 +192,7 @@
     justify-content: center;
     z-index: 1000;
   }
-  .modal-overlay.active {
-    display: flex;
-  }
+  .modal-overlay.active { display: flex; }
   .modal-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -227,10 +226,13 @@
 <body>
 
 <div class="app">
-  <h1>Random User Picker</h1>
-  <p class="subtitle">Round-robin picker &mdash; every checked user is picked once before anyone repeats.</p>
+  <h1>pickrPro®</h1>
+  <p class="subtitle">A simple Round-robin picker for your team. PickrPro® ensures every checked user is picked once before anyone repeats.</p>
 
-  <div id="result" class="result empty">No one picked yet</div>
+  <div id="resultContainer" class="result-box empty">
+    <div id="resultName" class="result-name">No one picked yet</div>
+    <div id="resultTime" class="result-time" style="display:none;"></div>
+  </div>
 
   <div class="card">
     <div class="controls-row">
@@ -263,6 +265,7 @@
 (function () {
   let cachedUsers = [];
   let shuffleInterval = null;
+  let isPicking = false;
 
   const userListEl = document.getElementById('userList');
   const emptyStateEl = document.getElementById('emptyState');
@@ -270,18 +273,48 @@
   const addUserBtn = document.getElementById('addUserBtn');
   const pickBtn = document.getElementById('pickBtn');
   const resetRoundBtn = document.getElementById('resetRoundBtn');
-  const resultEl = document.getElementById('result');
+  const resultContainer = document.getElementById('resultContainer');
+  const resultName = document.getElementById('resultName');
+  const resultTime = document.getElementById('resultTime');
   const statusEl = document.getElementById('status');
   const thinkingModal = document.getElementById('thinkingModal');
   const shufflingName = document.getElementById('shufflingName');
 
-  async function fetchUsers() {
-    const res = await fetch('/api/users');
-    cachedUsers = await res.json();
-    render(cachedUsers);
+  async function fetchState() {
+    // Avoid background fetch overrides during active picking animation
+    if (isPicking) return;
+
+    try {
+      const res = await fetch('/api/state');
+      const state = await res.json();
+      cachedUsers = state.users;
+      render(state);
+    } catch (e) {
+      console.error('Failed to sync state:', e);
+    }
   }
 
-  function render(users) {
+  function render(state) {
+    const { users, last_picked_user } = state;
+    
+    // Render last picked user with timestamp
+    if (last_picked_user) {
+      resultName.textContent = last_picked_user.name;
+      const formattedTime = new Date(last_picked_user.picked_at).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      resultTime.textContent = `Picked at ${formattedTime}`;
+      resultTime.style.display = 'block';
+      resultContainer.classList.remove('empty');
+    } else {
+      resultName.textContent = 'No one picked yet';
+      resultTime.style.display = 'none';
+      resultContainer.classList.add('empty');
+    }
+
+    // Render list
     userListEl.innerHTML = '';
     emptyStateEl.style.display = users.length === 0 ? 'block' : 'none';
 
@@ -310,7 +343,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ checked: checkbox.checked })
         });
-        fetchUsers();
+        fetchState();
       });
 
       const label = document.createElement('label');
@@ -326,7 +359,7 @@
       removeBtn.textContent = '✕';
       removeBtn.addEventListener('click', async () => {
         await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
-        fetchUsers();
+        fetchState();
       });
 
       li.appendChild(checkbox);
@@ -342,8 +375,6 @@
     if (checkedNames.length === 0) return;
 
     thinkingModal.classList.add('active');
-    
-    // Rapidly switch names every 70ms to produce a slot machine effect
     shuffleInterval = setInterval(() => {
       const randomName = checkedNames[Math.floor(Math.random() * checkedNames.length)];
       shufflingName.textContent = randomName;
@@ -364,37 +395,28 @@
       body: JSON.stringify({ name })
     });
     newUserInput.value = '';
-    fetchUsers();
+    fetchState();
   }
 
   async function pickUser() {
+    isPicking = true;
     startShuffleAnimation();
 
     try {
-      const res = await fetch('/api/pick', { method: 'POST' });
-      const chosen = await res.json();
-      
+      await fetch('/api/pick', { method: 'POST' });
       stopShuffleAnimation();
-
-      if (chosen) {
-        resultEl.textContent = chosen.name;
-        resultEl.classList.remove('empty');
-      } else {
-        resultEl.textContent = 'No eligible users';
-        resultEl.classList.add('empty');
-      }
-      fetchUsers();
+      isPicking = false;
+      fetchState();
     } catch (e) {
       stopShuffleAnimation();
+      isPicking = false;
       console.error(e);
     }
   }
 
   async function resetRound() {
     await fetch('/api/reset', { method: 'POST' });
-    resultEl.textContent = 'No one picked yet';
-    resultEl.classList.add('empty');
-    fetchUsers();
+    fetchState();
   }
 
   addUserBtn.addEventListener('click', addUser);
@@ -402,7 +424,9 @@
   pickBtn.addEventListener('click', pickUser);
   resetRoundBtn.addEventListener('click', resetRound);
 
-  fetchUsers();
+  // Initial fetch and automatic polling every 2.5 seconds
+  fetchState();
+  setInterval(fetchState, 2500);
 })();
 </script>
 </body>

@@ -1,5 +1,6 @@
 import random
 import uuid
+from datetime import datetime, timezone
 from threading import Lock
 from typing import Dict, List, Optional
 from pydantic import BaseModel
@@ -10,6 +11,12 @@ class User(BaseModel):
     name: str
     checked: bool = True
     pickedThisRound: bool = False
+    picked_at: Optional[str] = None
+
+
+class StateResponse(BaseModel):
+    users: List[User]
+    last_picked_user: Optional[User] = None
 
 
 class MemoryStore:
@@ -17,6 +24,7 @@ class MemoryStore:
         self._lock = Lock()
         self._users: Dict[str, User] = {}
         self._last_picked_id: Optional[str] = None
+        self._last_picked_user: Optional[User] = None
         self._seed_default_users()
 
     def _seed_default_users(self):
@@ -24,9 +32,12 @@ class MemoryStore:
             uid = str(uuid.uuid4())[:8]
             self._users[uid] = User(id=uid, name=name)
 
-    def get_all(self) -> List[User]:
+    def get_state(self) -> StateResponse:
         with self._lock:
-            return list(self._users.values())
+            return StateResponse(
+                users=list(self._users.values()),
+                last_picked_user=self._last_picked_user
+            )
 
     def add_user(self, name: str) -> User:
         with self._lock:
@@ -46,6 +57,7 @@ class MemoryStore:
         with self._lock:
             if self._last_picked_id == user_id:
                 self._last_picked_id = None
+                self._last_picked_user = None
             return self._users.pop(user_id, None) is not None
 
     def pick_next(self) -> Optional[User]:
@@ -62,7 +74,7 @@ class MemoryStore:
                     u.pickedThisRound = False
                 eligible = checked_users
 
-            # Prevent consecutive pick if multiple checked users exist
+            # Prevent consecutive selection
             candidate_pool = eligible
             if self._last_picked_id and len(checked_users) > 1:
                 filtered = [u for u in eligible if u.id != self._last_picked_id]
@@ -71,14 +83,16 @@ class MemoryStore:
 
             chosen = random.choice(candidate_pool)
             chosen.pickedThisRound = True
+            chosen.picked_at = datetime.now(timezone.utc).isoformat()
+            
             self._last_picked_id = chosen.id
+            self._last_picked_user = chosen
             return chosen
 
     def reset_round(self):
         with self._lock:
             for u in self._users.values():
                 u.pickedThisRound = False
-            # Retain self._last_picked_id so manual reset also prevents immediate repeat
 
 
 store = MemoryStore()

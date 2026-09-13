@@ -1,20 +1,20 @@
 import asyncio
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
-from app.store import User, store
+from app.store import StateResponse, User, store
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 app = FastAPI(
-    title="Random User Picker",
+    title="pickerPro®",
     description="Thread-safe, in-memory round-robin user picker API.",
-    version="1.0.0",
+    version="1.1.0",
 )
 
 
@@ -31,9 +31,9 @@ def read_root(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
 
 
-@app.get("/api/users", response_model=List[User])
-def get_users():
-    return store.get_all()
+@app.get("/api/state", response_model=StateResponse)
+def get_state():
+    return store.get_state()
 
 
 @app.post("/api/users", response_model=User)
@@ -61,8 +61,7 @@ def delete_user(user_id: str):
 
 @app.post("/api/pick", response_model=Optional[User])
 async def pick_user():
-    # Simulate a brief delay to allow the client-side picking animation to run
-    await asyncio.sleep(1.5)
+    await asyncio.sleep(1.2)
     return store.pick_next()
 
 
