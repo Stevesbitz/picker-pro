@@ -68,3 +68,21 @@ uvicorn app.main:app --reload
 Web Application: [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
 Swagger API Docs: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+## Running tests
+
+The test suite uses Python's built-in `unittest` module and needs no extra test
+dependencies. From the project root, run:
+
+```bash
+python -m unittest discover -v
+```
+
+The tests cover the in-memory store's fairness rules, round reset behavior,
+checked-user handling, timestamps, and each API handler's validation and error
+responses.
+
+## Continuous integration
+
+GitHub Actions runs the full test suite and compiles the application after every
+push to any branch. The workflow is defined in `.github/workflows/ci.yml`.
