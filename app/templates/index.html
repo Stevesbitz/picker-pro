@@ -221,6 +221,31 @@
     cursor: not-allowed;
   }
 
+  #pickBtn {
+    background-color: var(--success);
+  }
+
+  #pickBtn:hover {
+    background-color: #166534;
+  }
+
+  #pickBtn:disabled {
+    background-color: var(--border-color);
+    color: var(--text-muted);
+  }
+
+  #resetRoundBtn {
+    border-color: #fecaca;
+    background-color: var(--danger-bg);
+    color: var(--danger);
+  }
+
+  #resetRoundBtn:hover {
+    border-color: var(--danger);
+    background-color: #fee2e2;
+    color: #b91c1c;
+  }
+
   .btn-secondary {
     background-color: transparent;
     color: var(--text-secondary);
@@ -288,6 +313,45 @@
     border-radius: 8px;
     color: var(--text-secondary);
     background: var(--bg-base);
+  }
+
+  .room-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0.35rem;
+    margin: 1rem 0 1.25rem;
+  }
+
+  .flow-step {
+    flex: 1;
+    min-width: 0;
+    padding: 0.65rem 0.45rem;
+    border: 1px solid #fed7aa;
+    border-radius: 10px;
+    background: var(--accent-light);
+    text-align: center;
+  }
+
+  .flow-number {
+    display: block;
+    margin-bottom: 0.22rem;
+    color: var(--accent);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  .flow-label {
+    display: block;
+    color: var(--text-primary);
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  .flow-arrow {
+    align-self: center;
+    color: var(--accent);
+    font-size: 0.9rem;
   }
 
   /* Inputs & List Items */
@@ -458,8 +522,14 @@
 <main>
   {% if not room %}
   <div class="card">
-    <h2 style="margin-top:0; font-size:1.1rem;">Create a team room</h2>
-    <p style="color:var(--text-secondary); font-size:0.9rem; line-height:1.5;">Create a private room for your team, then share its link. Each room has its own roster and selection history.</p>
+    <h2 style="margin-top:0; font-size:1.1rem;">Start your team’s picker</h2>
+    <div class="room-flow" aria-label="Create, share, and pick flow">
+      <div class="flow-step"><span class="flow-number">01</span><span class="flow-label">Create a room</span></div>
+      <span class="flow-arrow" aria-hidden="true">→</span>
+      <div class="flow-step"><span class="flow-number">02</span><span class="flow-label">Share the link</span></div>
+      <span class="flow-arrow" aria-hidden="true">→</span>
+      <div class="flow-step"><span class="flow-number">03</span><span class="flow-label">Pick fairly</span></div>
+    </div>
     <div class="add-row" style="margin-bottom:0;">
       <input type="text" id="newRoomInput" placeholder="Team name..." maxlength="60" />
       <button id="createRoomBtn" class="btn-primary">Create room</button>
@@ -586,12 +656,15 @@
     
     if (last_picked_user) {
       resultName.textContent = last_picked_user.name;
-      const formattedTime = new Date(last_picked_user.picked_at).toLocaleTimeString([], {
+      const formattedTime = new Date(last_picked_user.picked_at).toLocaleString([], {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit'
       });
-      resultTime.textContent = `Picked at ${formattedTime}`;
+      resultTime.textContent = `Picked on ${formattedTime}`;
       resultTime.style.display = 'block';
       resultContainer.classList.remove('empty');
     } else {
@@ -609,9 +682,16 @@
     if (checked.length === 0) {
       statusEl.textContent = 'Check at least one user to enable selection.';
       pickBtn.disabled = true;
+      pickBtn.textContent = 'Pick next user';
     } else {
       pickBtn.disabled = false;
-      statusEl.textContent = `${remaining.length} of ${checked.length} eligible user(s) remaining in round.`;
+      if (remaining.length === 0) {
+        statusEl.textContent = 'Round complete. Start the next round or reset manually.';
+        pickBtn.textContent = 'Start next round';
+      } else {
+        statusEl.textContent = `${remaining.length} of ${checked.length} eligible user(s) remaining in round.`;
+        pickBtn.textContent = remaining.length === 1 ? 'Pick last user' : 'Pick next user';
+      }
     }
 
     users.forEach((user) => {
@@ -685,7 +765,9 @@
 
   async function pickUser() {
     isPicking = true;
-    startShuffleAnimation();
+    const remainingUsers = cachedUsers.filter((user) => user.checked && !user.pickedThisRound);
+    const isLastUser = remainingUsers.length === 1;
+    if (!isLastUser) startShuffleAnimation();
 
     try {
       await fetch(api('/pick'), { method: 'POST' });

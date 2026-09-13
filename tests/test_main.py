@@ -2,7 +2,7 @@ import asyncio
 import unittest
 from unittest.mock import AsyncMock, Mock, patch
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
 
 from app import main
 from app.store import Room, StateResponse, User
@@ -12,6 +12,47 @@ ROOM_ID = "team-room"
 
 
 class ApiHandlerTests(unittest.TestCase):
+    @staticmethod
+    def request(path: str) -> Request:
+        return Request(
+            {
+                "type": "http",
+                "method": "GET",
+                "scheme": "http",
+                "path": path,
+                "raw_path": path.encode(),
+                "query_string": b"",
+                "headers": [],
+                "server": ("testserver", 80),
+            }
+        )
+
+    def test_browser_404_uses_the_friendly_error_page(self):
+        response = asyncio.run(
+            main.http_exception_handler(self.request("/rooms/missing"), HTTPException(status_code=404))
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertIn(b"Page not found", response.body)
+        self.assertIn(b"Return home", response.body)
+
+    def test_api_404_remains_a_json_error(self):
+        response = asyncio.run(
+            main.http_exception_handler(
+                self.request("/api/rooms/missing/state"),
+                HTTPException(status_code=404, detail="Room not found"),
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.body, b'{"detail":"Room not found"}')
+
+    def test_unhandled_api_error_does_not_expose_internal_details(self):
+        response = asyncio.run(main.unhandled_exception_handler(self.request("/api/rooms/id/state"), RuntimeError("secret")))
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.body, b'{"detail":"Internal server error"}')
+
     def test_create_room_strips_name_and_returns_a_share_link(self):
         room = Room(id=ROOM_ID, name="Engineering")
         request = Mock()
@@ -102,6 +143,9 @@ class ApiHandlerTests(unittest.TestCase):
     def test_pick_user_waits_then_uses_requested_room(self):
         user = User(id="user-1", name="Ada")
         state_store = Mock()
+        state_store.get_state.return_value = StateResponse(
+            users=[user, User(id="user-2", name="Grace")]
+        )
         state_store.pick_next.return_value = user
         with patch("app.main.room_store") as rooms, patch(
             "app.main.asyncio.sleep", new_callable=AsyncMock
@@ -112,6 +156,22 @@ class ApiHandlerTests(unittest.TestCase):
 
         self.assertEqual(response, user)
         sleep.assert_awaited_once_with(1.2)
+        state_store.pick_next.assert_called_once_with()
+
+    def test_pick_user_skips_delay_when_one_user_is_left(self):
+        user = User(id="user-1", name="Ada")
+        state_store = Mock()
+        state_store.get_state.return_value = StateResponse(users=[user])
+        state_store.pick_next.return_value = user
+        with patch("app.main.room_store") as rooms, patch(
+            "app.main.asyncio.sleep", new_callable=AsyncMock
+        ) as sleep:
+            rooms.get_state_store.return_value = state_store
+
+            response = asyncio.run(main.pick_user(ROOM_ID))
+
+        self.assertEqual(response, user)
+        sleep.assert_not_awaited()
         state_store.pick_next.assert_called_once_with()
 
     def test_reset_round_delegates_to_requested_room(self):
