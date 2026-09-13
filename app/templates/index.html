@@ -3,221 +3,348 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>pickrPro®</title>
+<title>pickerPro®</title>
 <style>
   :root {
-    --bg: #0f172a;
-    --card: #1e293b;
-    --accent: #6366f1;
-    --accent-hover: #4f46e5;
-    --text: #e2e8f0;
-    --muted: #94a3b8;
-    --border: #334155;
-    --success: #22c55e;
-    --danger: #ef4444;
+    --bg-base: #f8fafc;
+    --bg-surface: #ffffff;
+    --border-color: #e2e8f0;
+    
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    
+    --accent: #c2410c; /* Warm terracotta */
+    --accent-hover: #9a3412;
+    --accent-light: #fff7ed;
+    
+    --success: #15803d;
+    --success-bg: #f0fdf4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   }
+
   * { box-sizing: border-box; }
+  
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--text);
+    background-color: var(--bg-base);
+    color: var(--text-primary);
     min-height: 100vh;
     display: flex;
-    justify-content: center;
-    padding: 2rem 1rem;
+    flex-direction: column;
+    align-items: center;
   }
-  .app {
+
+  /* Structural Sections */
+  header {
     width: 100%;
-    max-width: 480px;
+    background-color: var(--bg-surface);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1.25rem 1rem;
+    text-align: center;
   }
+
+  main {
+    width: 100%;
+    max-width: 520px;
+    padding: 1.5rem 1rem;
+    flex: 1;
+  }
+
+  footer {
+    width: 100%;
+    background-color: var(--bg-surface);
+    border-top: 1px solid var(--border-color);
+    padding: 1rem;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: auto;
+  }
+
+  /* Header Typography */
   h1 {
-    font-size: 1.5rem;
-    margin-bottom: 0.25rem;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+    color: var(--text-primary);
   }
-  p.subtitle {
-    color: var(--muted);
-    margin-top: 0;
-    margin-bottom: 1.5rem;
-    font-size: 0.9rem;
+  
+  .subtitle {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin: 0;
   }
+
+  /* Cards & Components */
   .card {
-    background: var(--card);
-    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 1.25rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-sm);
   }
+
+  /* Collapsible User Guide */
+  .guide-details {
+    background: var(--accent-light);
+    border: 1px solid #ffedd5;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+
+  .guide-summary {
+    padding: 0.85rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--accent);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .guide-content {
+    padding: 0 1.25rem 1rem 1.25rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .guide-content ol {
+    margin: 0;
+    padding-left: 1.2rem;
+  }
+
+  .guide-content li {
+    margin-bottom: 0.4rem;
+  }
+
+  /* Display Banner */
+  .result-box {
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ea580c, #c2410c);
+    color: #ffffff;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-md);
+    transition: all 0.2s ease;
+  }
+
+  .result-box.empty {
+    background: var(--bg-surface);
+    border: 1px dashed var(--border-color);
+    color: var(--text-muted);
+    box-shadow: none;
+  }
+
+  .result-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .result-time {
+    font-size: 0.8rem;
+    margin-top: 0.35rem;
+    opacity: 0.9;
+  }
+
+  /* Controls & Buttons */
+  .controls-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .controls-row button {
+    flex: 1;
+  }
+
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    padding: 0.65rem 1rem;
+    font-weight: 600;
+    transition: background-color 0.15s ease;
+  }
+
+  .btn-primary {
+    background-color: var(--accent);
+    color: #ffffff;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--accent-hover);
+  }
+
+  .btn-primary:disabled {
+    background-color: var(--border-color);
+    color: var(--text-muted);
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+  }
+
+  .status {
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+
+  /* Inputs & List Items */
   .add-row {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1rem;
   }
+
   .add-row input[type="text"] {
     flex: 1;
     padding: 0.6rem 0.75rem;
     border-radius: 8px;
-    border: 1px solid var(--border);
-    background: #0f172a;
-    color: var(--text);
-    font-size: 0.95rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-size: 0.9rem;
   }
+
   .add-row input[type="text"]:focus {
     outline: 2px solid var(--accent);
   }
-  button {
-    cursor: pointer;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    padding: 0.6rem 1rem;
-    font-weight: 600;
-    transition: background 0.15s ease;
-  }
-  .btn-primary {
-    background: var(--accent);
-    color: white;
-  }
-  .btn-primary:hover { background: var(--accent-hover); }
-  .btn-primary:disabled {
-    background: #475569;
-    cursor: not-allowed;
-  }
-  .btn-secondary {
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
-  .btn-secondary:hover { color: var(--text); border-color: var(--muted); }
 
   ul.user-list {
     list-style: none;
     margin: 0;
     padding: 0;
-    max-height: 320px;
+    max-height: 280px;
     overflow-y: auto;
   }
+
   ul.user-list li {
     display: flex;
     align-items: center;
     gap: 0.65rem;
-    padding: 0.55rem 0.25rem;
-    border-bottom: 1px solid var(--border);
+    padding: 0.6rem 0.25rem;
+    border-bottom: 1px solid var(--border-color);
   }
-  ul.user-list li:last-child { border-bottom: none; }
-  ul.user-list li.picked-round { opacity: 0.5; }
+
+  ul.user-list li:last-child {
+    border-bottom: none;
+  }
+
+  ul.user-list li.picked-round {
+    opacity: 0.5;
+  }
+
   ul.user-list li label {
     flex: 1;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     cursor: pointer;
-    user-select: none;
+    color: var(--text-primary);
   }
+
   ul.user-list li input[type="checkbox"] {
     width: 18px;
     height: 18px;
     accent-color: var(--accent);
     cursor: pointer;
   }
+
   .badge {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     padding: 0.15rem 0.5rem;
     border-radius: 999px;
-    background: #334155;
-    color: var(--muted);
+    background: var(--bg-base);
+    color: var(--text-secondary);
   }
+
   .badge.done {
-    background: rgba(34, 197, 94, 0.15);
+    background: var(--success-bg);
     color: var(--success);
   }
+
   .remove-btn {
     background: transparent;
+    color: var(--text-muted);
+    padding: 0.2rem 0.4rem;
+    font-size: 0.9rem;
+  }
+
+  .remove-btn:hover {
+    background: var(--danger-bg);
     color: var(--danger);
-    padding: 0.15rem 0.4rem;
-    font-size: 1rem;
-    line-height: 1;
-  }
-  .remove-btn:hover { background: rgba(239, 68, 68, 0.15); }
-
-  .result-box {
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--accent), #8b5cf6);
-    padding: 1.25rem 1rem;
-    text-align: center;
-    margin-bottom: 1.25rem;
-  }
-  .result-box.empty {
-    background: var(--card);
-    border: 1px dashed var(--border);
-    color: var(--muted);
-  }
-  .result-name {
-    font-size: 1.4rem;
-    font-weight: 700;
-  }
-  .result-time {
-    font-size: 0.8rem;
-    margin-top: 0.35rem;
-    opacity: 0.85;
-  }
-
-  .controls-row {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-  .controls-row button { flex: 1; }
-
-  .status {
-    margin-top: 0.75rem;
-    font-size: 0.85rem;
-    color: var(--muted);
-    text-align: center;
   }
 
   .empty-state {
-    color: var(--muted);
-    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
     text-align: center;
     padding: 1rem 0;
   }
 
-  /* Modal Overlay Controls */
+  /* Thinking Modal */
   .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(6px);
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(4px);
     display: none;
     align-items: center;
     justify-content: center;
     z-index: 1000;
   }
-  .modal-overlay.active { display: flex; }
+
+  .modal-overlay.active {
+    display: flex;
+  }
+
   .modal-card {
-    background: var(--card);
-    border: 1px solid var(--border);
+    background: var(--bg-surface);
     border-radius: 16px;
     padding: 2rem;
     text-align: center;
     width: 90%;
-    max-width: 360px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    max-width: 340px;
+    box-shadow: var(--shadow-md);
   }
+
   .spinner {
-    width: 48px;
-    height: 48px;
-    border: 4px solid var(--border);
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border-color);
     border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
-    margin: 0 auto 1.25rem auto;
+    margin: 0 auto 1rem auto;
   }
+
   .shuffling-name {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: 700;
     color: var(--accent);
-    min-height: 2rem;
+    min-height: 1.8rem;
   }
+
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
@@ -225,15 +352,35 @@
 </head>
 <body>
 
-<div class="app">
-  <h1>pickrPro®</h1>
-  <p class="subtitle">A simple Round-robin picker for your team. PickrPro® ensures every checked user is picked once before anyone repeats.</p>
+<header>
+  <h1>pickerPro®</h1>
+  <p class="subtitle">Synchronized round-robin selection tool for your team</p>
+</header>
 
+<main>
+  <!-- Collapsible Guide Component -->
+  <details class="guide-details">
+    <summary class="guide-summary">
+      <span>How to use this app</span>
+      <span>▼</span>
+    </summary>
+    <div class="guide-content">
+      <ol>
+        <li>Add names to the roster or toggle individual checkmarks to set eligibility.</li>
+        <li>Click <strong>Pick Next User</strong> to perform a fair selection.</li>
+        <li>Every eligible candidate is selected once per round without back-to-back repeats.</li>
+        <li>State updates continuously across all connected viewers.</li>
+      </ol>
+    </div>
+  </details>
+
+  <!-- Last Pick Display -->
   <div id="resultContainer" class="result-box empty">
     <div id="resultName" class="result-name">No one picked yet</div>
     <div id="resultTime" class="result-time" style="display:none;"></div>
   </div>
 
+  <!-- Primary Action Controls -->
   <div class="card">
     <div class="controls-row">
       <button id="pickBtn" class="btn-primary">Pick Next User</button>
@@ -242,21 +389,26 @@
     <div id="status" class="status"></div>
   </div>
 
+  <!-- Roster Management -->
   <div class="card">
     <div class="add-row">
-      <input type="text" id="newUserInput" placeholder="Add a user name..." maxlength="60" />
+      <input type="text" id="newUserInput" placeholder="Enter a name..." maxlength="60" />
       <button id="addUserBtn" class="btn-primary">Add</button>
     </div>
     <ul id="userList" class="user-list"></ul>
-    <div id="emptyState" class="empty-state" style="display:none;">No users yet. Add someone above.</div>
+    <div id="emptyState" class="empty-state" style="display:none;">No users in the list.</div>
   </div>
-</div>
+</main>
 
-<!-- Thinking Modal -->
+<footer>
+  ©iteesofts 2026
+</footer>
+
+<!-- Selection Animation Overlay -->
 <div id="thinkingModal" class="modal-overlay">
   <div class="modal-card">
     <div class="spinner"></div>
-    <div style="font-size:0.9rem; color:var(--muted); margin-bottom:0.5rem;">Selecting candidate...</div>
+    <div style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.5rem;">Selecting candidate...</div>
     <div id="shufflingName" class="shuffling-name">...</div>
   </div>
 </div>
@@ -281,9 +433,7 @@
   const shufflingName = document.getElementById('shufflingName');
 
   async function fetchState() {
-    // Avoid background fetch overrides during active picking animation
     if (isPicking) return;
-
     try {
       const res = await fetch('/api/state');
       const state = await res.json();
@@ -297,7 +447,6 @@
   function render(state) {
     const { users, last_picked_user } = state;
     
-    // Render last picked user with timestamp
     if (last_picked_user) {
       resultName.textContent = last_picked_user.name;
       const formattedTime = new Date(last_picked_user.picked_at).toLocaleTimeString([], {
@@ -314,7 +463,6 @@
       resultContainer.classList.add('empty');
     }
 
-    // Render list
     userListEl.innerHTML = '';
     emptyStateEl.style.display = users.length === 0 ? 'block' : 'none';
 
@@ -322,11 +470,11 @@
     const remaining = users.filter((u) => u.checked && !u.pickedThisRound);
 
     if (checked.length === 0) {
-      statusEl.textContent = 'Check at least one user to start picking.';
+      statusEl.textContent = 'Check at least one user to enable selection.';
       pickBtn.disabled = true;
     } else {
       pickBtn.disabled = false;
-      statusEl.textContent = `${remaining.length} of ${checked.length} eligible user(s) left in this round.`;
+      statusEl.textContent = `${remaining.length} of ${checked.length} eligible user(s) remaining in round.`;
     }
 
     users.forEach((user) => {
@@ -424,7 +572,6 @@
   pickBtn.addEventListener('click', pickUser);
   resetRoundBtn.addEventListener('click', resetRound);
 
-  // Initial fetch and automatic polling every 2.5 seconds
   fetchState();
   setInterval(fetchState, 2500);
 })();

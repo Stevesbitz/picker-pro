@@ -28,7 +28,7 @@ class MemoryStore:
         self._seed_default_users()
 
     def _seed_default_users(self):
-        for name in ["Alice", "Bob", "Charlie"]:
+        for name in ["Mario", "Luigi", "Yoshi"]:
             uid = str(uuid.uuid4())[:8]
             self._users[uid] = User(id=uid, name=name)
 
