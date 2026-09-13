@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Random User Picker</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --accent: #6366f1;
+    --accent-hover: #4f46e5;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #334155;
+    --success: #22c55e;
+    --danger: #ef4444;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+  .app {
+    width: 100%;
+    max-width: 480px;
+  }
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+  p.subtitle {
+    color: var(--muted);
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+  .add-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .add-row input[type="text"] {
+    flex: 1;
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #0f172a;
+    color: var(--text);
+    font-size: 0.95rem;
+  }
+  .add-row input[type="text"]:focus {
+    outline: 2px solid var(--accent);
+  }
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+    transition: background 0.15s ease;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled {
+    background: #475569;
+    cursor: not-allowed;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { color: var(--text); border-color: var(--muted); }
+
+  ul.user-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  ul.user-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.55rem 0.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  ul.user-list li:last-child { border-bottom: none; }
+  ul.user-list li.picked-round { opacity: 0.5; }
+  ul.user-list li label {
+    flex: 1;
+    font-size: 0.95rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  ul.user-list li input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: #334155;
+    color: var(--muted);
+  }
+  .badge.done {
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--success);
+  }
+  .remove-btn {
+    background: transparent;
+    color: var(--danger);
+    padding: 0.15rem 0.4rem;
+    font-size: 1rem;
+    line-height: 1;
+  }
+  .remove-btn:hover { background: rgba(239, 68, 68, 0.15); }
+
+  .result {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    min-height: 1.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .result.empty {
+    background: var(--card);
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  .controls-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .controls-row button { flex: 1; }
+
+  .status {
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .empty-state {
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 1rem 0;
+  }
+
+  /* Modal Overlay Controls */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .modal-overlay.active {
+    display: flex;
+  }
+  .modal-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    width: 90%;
+    max-width: 360px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  }
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 1.25rem auto;
+  }
+  .shuffling-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    min-height: 2rem;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <h1>Random User Picker</h1>
+  <p class="subtitle">Round-robin picker &mdash; every checked user is picked once before anyone repeats.</p>
+
+  <div id="result" class="result empty">No one picked yet</div>
+
+  <div class="card">
+    <div class="controls-row">
+      <button id="pickBtn" class="btn-primary">Pick Next User</button>
+      <button id="resetRoundBtn" class="btn-secondary">Reset Round</button>
+    </div>
+    <div id="status" class="status"></div>
+  </div>
+
+  <div class="card">
+    <div class="add-row">
+      <input type="text" id="newUserInput" placeholder="Add a user name..." maxlength="60" />
+      <button id="addUserBtn" class="btn-primary">Add</button>
+    </div>
+    <ul id="userList" class="user-list"></ul>
+    <div id="emptyState" class="empty-state" style="display:none;">No users yet. Add someone above.</div>
+  </div>
+</div>
+
+<!-- Thinking Modal -->
+<div id="thinkingModal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="spinner"></div>
+    <div style="font-size:0.9rem; color:var(--muted); margin-bottom:0.5rem;">Selecting candidate...</div>
+    <div id="shufflingName" class="shuffling-name">...</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  let cachedUsers = [];
+  let shuffleInterval = null;
+
+  const userListEl = document.getElementById('userList');
+  const emptyStateEl = document.getElementById('emptyState');
+  const newUserInput = document.getElementById('newUserInput');
+  const addUserBtn = document.getElementById('addUserBtn');
+  const pickBtn = document.getElementById('pickBtn');
+  const resetRoundBtn = document.getElementById('resetRoundBtn');
+  const resultEl = document.getElementById('result');
+  const statusEl = document.getElementById('status');
+  const thinkingModal = document.getElementById('thinkingModal');
+  const shufflingName = document.getElementById('shufflingName');
+
+  async function fetchUsers() {
+    const res = await fetch('/api/users');
+    cachedUsers = await res.json();
+    render(cachedUsers);
+  }
+
+  function render(users) {
+    userListEl.innerHTML = '';
+    emptyStateEl.style.display = users.length === 0 ? 'block' : 'none';
+
+    const checked = users.filter((u) => u.checked);
+    const remaining = users.filter((u) => u.checked && !u.pickedThisRound);
+
+    if (checked.length === 0) {
+      statusEl.textContent = 'Check at least one user to start picking.';
+      pickBtn.disabled = true;
+    } else {
+      pickBtn.disabled = false;
+      statusEl.textContent = `${remaining.length} of ${checked.length} eligible user(s) left in this round.`;
+    }
+
+    users.forEach((user) => {
+      const li = document.createElement('li');
+      if (user.pickedThisRound) li.classList.add('picked-round');
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = user.checked;
+      checkbox.id = 'chk-' + user.id;
+      checkbox.addEventListener('change', async () => {
+        await fetch(`/api/users/${user.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ checked: checkbox.checked })
+        });
+        fetchUsers();
+      });
+
+      const label = document.createElement('label');
+      label.htmlFor = checkbox.id;
+      label.textContent = user.name;
+
+      const badge = document.createElement('span');
+      badge.className = 'badge' + (user.pickedThisRound ? ' done' : '');
+      badge.textContent = user.pickedThisRound ? 'picked' : 'eligible';
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'remove-btn';
+      removeBtn.textContent = '✕';
+      removeBtn.addEventListener('click', async () => {
+        await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
+        fetchUsers();
+      });
+
+      li.appendChild(checkbox);
+      li.appendChild(label);
+      li.appendChild(badge);
+      li.appendChild(removeBtn);
+      userListEl.appendChild(li);
+    });
+  }
+
+  function startShuffleAnimation() {
+    const checkedNames = cachedUsers.filter(u => u.checked).map(u => u.name);
+    if (checkedNames.length === 0) return;
+
+    thinkingModal.classList.add('active');
+    
+    // Rapidly switch names every 70ms to produce a slot machine effect
+    shuffleInterval = setInterval(() => {
+      const randomName = checkedNames[Math.floor(Math.random() * checkedNames.length)];
+      shufflingName.textContent = randomName;
+    }, 70);
+  }
+
+  function stopShuffleAnimation() {
+    if (shuffleInterval) clearInterval(shuffleInterval);
+    thinkingModal.classList.remove('active');
+  }
+
+  async function addUser() {
+    const name = newUserInput.value.trim();
+    if (!name) return;
+    await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    newUserInput.value = '';
+    fetchUsers();
+  }
+
+  async function pickUser() {
+    startShuffleAnimation();
+
+    try {
+      const res = await fetch('/api/pick', { method: 'POST' });
+      const chosen = await res.json();
+      
+      stopShuffleAnimation();
+
+      if (chosen) {
+        resultEl.textContent = chosen.name;
+        resultEl.classList.remove('empty');
+      } else {
+        resultEl.textContent = 'No eligible users';
+        resultEl.classList.add('empty');
+      }
+      fetchUsers();
+    } catch (e) {
+      stopShuffleAnimation();
+      console.error(e);
+    }
+  }
+
+  async function resetRound() {
+    await fetch('/api/reset', { method: 'POST' });
+    resultEl.textContent = 'No one picked yet';
+    resultEl.classList.add('empty');
+    fetchUsers();
+  }
+
+  addUserBtn.addEventListener('click', addUser);
+  newUserInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addUser(); });
+  pickBtn.addEventListener('click', pickUser);
+  resetRoundBtn.addEventListener('click', resetRound);
+
+  fetchUsers();
+})();
+</script>
+</body>
+</html>
