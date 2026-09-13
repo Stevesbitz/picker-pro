@@ -2,7 +2,8 @@ import asyncio
 from pathlib import Path
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
@@ -32,6 +33,42 @@ class RoomResponse(Room):
 
 class ToggleUserRequest(BaseModel):
     checked: bool
+
+
+def is_api_request(request: Request) -> bool:
+    return request.url.path.startswith("/api/")
+
+
+def error_page(request: Request, status_code: int, title: str, message: str):
+    return templates.TemplateResponse(
+        request=request,
+        name="error.html",
+        context={"status_code": status_code, "title": title, "message": message},
+        status_code=status_code,
+    )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    if is_api_request(request):
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    if exc.status_code == 404:
+        return error_page(request, 404, "Page not found", "The page or team room you requested does not exist.")
+    return error_page(request, exc.status_code, "Something went wrong", str(exc.detail))
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    if is_api_request(request):
+        return JSONResponse(status_code=422, content={"detail": exc.errors()})
+    return error_page(request, 400, "Invalid request", "Please check your details and try again.")
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    if is_api_request(request):
+        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+    return error_page(request, 500, "Unexpected error", "Please try again in a moment.")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -95,8 +132,16 @@ def delete_user(room_id: str, user_id: str):
 
 @app.post("/api/rooms/{room_id}/pick", response_model=Optional[User])
 async def pick_user(room_id: str):
-    await asyncio.sleep(1.2)
-    return get_room_state_or_404(room_id).pick_next()
+    state_store = get_room_state_or_404(room_id)
+    state = state_store.get_state()
+    checked_users = [user for user in state.users if user.checked]
+    remaining_users = [user for user in checked_users if not user.pickedThisRound]
+    candidate_count = len(remaining_users) or len(checked_users)
+
+    # The delay only supports the shuffle animation; skip it for a guaranteed pick.
+    if candidate_count > 1:
+        await asyncio.sleep(1.2)
+    return state_store.pick_next()
 
 
 @app.post("/api/rooms/{room_id}/reset")
