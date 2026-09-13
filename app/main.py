@@ -1,6 +1,10 @@
 import asyncio
+from collections import defaultdict, deque
+from math import ceil
 from pathlib import Path
-from typing import Optional
+from threading import Lock
+from time import monotonic
+from typing import Deque, Dict, Optional
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -17,6 +21,50 @@ app = FastAPI(
     description="Thread-safe, in-memory round-robin user picker API.",
     version="1.1.0",
 )
+
+RATE_LIMIT_REQUESTS = 120
+RATE_LIMIT_WINDOW_SECONDS = 60
+
+
+class ApiRateLimiter:
+    """Thread-safe sliding-window limiter for API requests from one client."""
+
+    def __init__(self, max_requests: int, window_seconds: int):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self._lock = Lock()
+        self._requests: Dict[str, Deque[float]] = defaultdict(deque)
+
+    def retry_after(self, client_id: str, now: Optional[float] = None) -> Optional[int]:
+        current_time = monotonic() if now is None else now
+        with self._lock:
+            requests = self._requests[client_id]
+            cutoff = current_time - self.window_seconds
+            while requests and requests[0] <= cutoff:
+                requests.popleft()
+
+            if len(requests) >= self.max_requests:
+                return max(1, ceil(self.window_seconds - (current_time - requests[0])))
+
+            requests.append(current_time)
+            return None
+
+
+api_rate_limiter = ApiRateLimiter(RATE_LIMIT_REQUESTS, RATE_LIMIT_WINDOW_SECONDS)
+
+
+@app.middleware("http")
+async def rate_limit_api_requests(request: Request, call_next):
+    if request.url.path.startswith("/api/"):
+        client_id = request.client.host if request.client else "unknown"
+        retry_after = api_rate_limiter.retry_after(client_id)
+        if retry_after is not None:
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Rate limit exceeded. Please try again shortly."},
+                headers={"Retry-After": str(retry_after)},
+            )
+    return await call_next(request)
 
 
 class CreateUserRequest(BaseModel):
