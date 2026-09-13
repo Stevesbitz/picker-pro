@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime
 from unittest.mock import patch
 
-from app.store import MemoryStore
+from app.store import MemoryStore, RoomStore
 
 
 class MemoryStoreTests(unittest.TestCase):
@@ -101,3 +101,26 @@ class MemoryStoreTests(unittest.TestCase):
         state = self.store.get_state()
         self.assertFalse(any(user.pickedThisRound for user in state.users))
         self.assertEqual(state.last_picked_user.id, ada.id)
+
+
+class RoomStoreTests(unittest.TestCase):
+    def test_each_room_has_an_empty_and_isolated_picker_state(self):
+        rooms = RoomStore()
+        engineering = rooms.create_room("Engineering")
+        design = rooms.create_room("Design")
+
+        engineering_state = rooms.get_state_store(engineering.id)
+        design_state = rooms.get_state_store(design.id)
+        engineering_state.add_user("Ada")
+
+        self.assertEqual(engineering.name, "Engineering")
+        self.assertEqual(design.name, "Design")
+        self.assertNotEqual(engineering.id, design.id)
+        self.assertEqual([user.name for user in engineering_state.get_state().users], ["Ada"])
+        self.assertEqual(design_state.get_state().users, [])
+
+    def test_unknown_room_has_no_metadata_or_picker_state(self):
+        rooms = RoomStore()
+
+        self.assertIsNone(rooms.get_room("missing"))
+        self.assertIsNone(rooms.get_state_store("missing"))

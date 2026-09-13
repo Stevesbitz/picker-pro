@@ -43,10 +43,18 @@
   /* Structural Sections */
   header {
     width: 100%;
-    background-color: var(--bg-surface);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    background: linear-gradient(135deg, #f1f5f9, #eaf0f6);
     border-bottom: 1px solid var(--border-color);
-    padding: 1.25rem 1rem;
-    text-align: center;
+    padding: 1rem 1.25rem;
+    text-align: left;
+  }
+
+  .header-brand {
+    min-width: 0;
   }
 
   main {
@@ -58,27 +66,32 @@
 
   footer {
     width: 100%;
-    background-color: var(--bg-surface);
+    background: #f1f5f9;
     border-top: 1px solid var(--border-color);
     padding: 1rem;
     text-align: center;
-    font-size: 0.85rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
     color: var(--text-secondary);
     margin-top: auto;
   }
 
   /* Header Typography */
   h1 {
-    font-size: 1.35rem;
+    font-size: 1.3rem;
     font-weight: 700;
-    margin: 0 0 0.25rem 0;
+    letter-spacing: -0.025em;
+    margin: 0;
     color: var(--text-primary);
   }
   
   .subtitle {
     color: var(--text-secondary);
-    font-size: 0.875rem;
-    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    margin: 0.18rem 0 0;
   }
 
   /* Cards & Components */
@@ -93,17 +106,17 @@
 
   /* Collapsible User Guide */
   .guide-details {
-    background: var(--accent-light);
-    border: 1px solid #ffedd5;
-    border-radius: 12px;
-    margin-bottom: 1rem;
-    overflow: hidden;
+    position: relative;
+    flex: 0 0 auto;
   }
 
   .guide-summary {
-    padding: 0.85rem 1.25rem;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    background: var(--accent-light);
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.78rem;
     color: var(--accent);
     cursor: pointer;
     user-select: none;
@@ -113,7 +126,16 @@
   }
 
   .guide-content {
-    padding: 0 1.25rem 1rem 1.25rem;
+    position: absolute;
+    z-index: 10;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    width: min(280px, calc(100vw - 2.5rem));
+    padding: 0.9rem 1rem 0.7rem;
+    border: 1px solid #fed7aa;
+    border-radius: 10px;
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-md);
     font-size: 0.85rem;
     color: var(--text-secondary);
     line-height: 1.5;
@@ -126,6 +148,12 @@
 
   .guide-content li {
     margin-bottom: 0.4rem;
+  }
+
+  @media (max-width: 420px) {
+    header { padding: 0.85rem 1rem; }
+    .guide-summary span:first-child { display: none; }
+    .guide-summary { padding: 0.45rem 0.55rem; }
   }
 
   /* Display Banner */
@@ -209,6 +237,57 @@
     font-size: 0.85rem;
     color: var(--text-secondary);
     text-align: center;
+  }
+
+  .room-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0.7rem 0 0;
+    padding: 0.35rem 0.65rem 0.35rem 0.45rem;
+    border: 1px solid #fed7aa;
+    border-radius: 999px;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .room-name::before {
+    content: "";
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px #ffedd5;
+  }
+
+  .room-name-label {
+    color: #9a3412;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .room-name-title {
+    color: var(--text-primary);
+  }
+
+  .share-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .share-link {
+    min-width: 0;
+    flex: 1;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    background: var(--bg-base);
   }
 
   /* Inputs & List Items */
@@ -350,15 +429,15 @@
   }
 </style>
 </head>
-<body>
+<body data-room-id="{{ room.id if room else '' }}">
 
 <header>
-  <h1>pickerPro®</h1>
-  <p class="subtitle">Synchronized round-robin selection tool for your team</p>
-</header>
-
-<main>
-  <!-- Collapsible Guide Component -->
+  <div class="header-brand">
+    <h1>pickerPro®</h1>
+    <p class="subtitle">A shared, fair way to choose who’s next.</p>
+    {% if room %}<div class="room-name"><span class="room-name-label">Team room</span><span class="room-name-title">{{ room.name }}</span></div>{% endif %}
+  </div>
+  {% if room %}
   <details class="guide-details">
     <summary class="guide-summary">
       <span>How to use this app</span>
@@ -373,7 +452,21 @@
       </ol>
     </div>
   </details>
+  {% endif %}
+</header>
 
+<main>
+  {% if not room %}
+  <div class="card">
+    <h2 style="margin-top:0; font-size:1.1rem;">Create a team room</h2>
+    <p style="color:var(--text-secondary); font-size:0.9rem; line-height:1.5;">Create a private room for your team, then share its link. Each room has its own roster and selection history.</p>
+    <div class="add-row" style="margin-bottom:0;">
+      <input type="text" id="newRoomInput" placeholder="Team name..." maxlength="60" />
+      <button id="createRoomBtn" class="btn-primary">Create room</button>
+    </div>
+    <div id="status" class="status"></div>
+  </div>
+  {% else %}
   <!-- Last Pick Display -->
   <div id="resultContainer" class="result-box empty">
     <div id="resultName" class="result-name">No one picked yet</div>
@@ -381,6 +474,14 @@
   </div>
 
   <!-- Primary Action Controls -->
+  <div class="card">
+    <strong style="font-size:0.9rem;">Share this room</strong>
+    <div class="share-row">
+      <input id="shareLink" class="share-link" value="{{ request.url }}" readonly aria-label="Shareable room link" />
+      <button id="copyLinkBtn" class="btn-secondary">Copy</button>
+    </div>
+  </div>
+
   <div class="card">
     <div class="controls-row">
       <button id="pickBtn" class="btn-primary">Pick Next User</button>
@@ -398,10 +499,11 @@
     <ul id="userList" class="user-list"></ul>
     <div id="emptyState" class="empty-state" style="display:none;">No users in the list.</div>
   </div>
+  {% endif %}
 </main>
 
 <footer>
-  ©iteesofts 2026
+  © 2026 iTeesofts · Team selection made fair
 </footer>
 
 <!-- Selection Animation Overlay -->
@@ -415,6 +517,41 @@
 
 <script>
 (function () {
+  const roomId = document.body.dataset.roomId;
+  const api = (path) => `/api/rooms/${roomId}${path}`;
+
+  if (!roomId) {
+    const newRoomInput = document.getElementById('newRoomInput');
+    const createRoomBtn = document.getElementById('createRoomBtn');
+    const statusEl = document.getElementById('status');
+
+    async function createRoom() {
+      const name = newRoomInput.value.trim();
+      if (!name) {
+        statusEl.textContent = 'Enter a team name to create a room.';
+        return;
+      }
+      createRoomBtn.disabled = true;
+      try {
+        const response = await fetch('/api/rooms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+        if (!response.ok) throw new Error('Unable to create room');
+        const room = await response.json();
+        window.location.assign(room.share_url);
+      } catch (error) {
+        statusEl.textContent = 'Unable to create the room. Please try again.';
+        createRoomBtn.disabled = false;
+      }
+    }
+
+    createRoomBtn.addEventListener('click', createRoom);
+    newRoomInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') createRoom(); });
+    return;
+  }
+
   let cachedUsers = [];
   let shuffleInterval = null;
   let isPicking = false;
@@ -435,7 +572,7 @@
   async function fetchState() {
     if (isPicking) return;
     try {
-      const res = await fetch('/api/state');
+      const res = await fetch(api('/state'));
       const state = await res.json();
       cachedUsers = state.users;
       render(state);
@@ -486,7 +623,7 @@
       checkbox.checked = user.checked;
       checkbox.id = 'chk-' + user.id;
       checkbox.addEventListener('change', async () => {
-        await fetch(`/api/users/${user.id}`, {
+        await fetch(api(`/users/${user.id}`), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ checked: checkbox.checked })
@@ -506,7 +643,7 @@
       removeBtn.className = 'remove-btn';
       removeBtn.textContent = '✕';
       removeBtn.addEventListener('click', async () => {
-        await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
+        await fetch(api(`/users/${user.id}`), { method: 'DELETE' });
         fetchState();
       });
 
@@ -537,7 +674,7 @@
   async function addUser() {
     const name = newUserInput.value.trim();
     if (!name) return;
-    await fetch('/api/users', {
+    await fetch(api('/users'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name })
@@ -551,7 +688,7 @@
     startShuffleAnimation();
 
     try {
-      await fetch('/api/pick', { method: 'POST' });
+      await fetch(api('/pick'), { method: 'POST' });
       stopShuffleAnimation();
       isPicking = false;
       fetchState();
@@ -563,7 +700,7 @@
   }
 
   async function resetRound() {
-    await fetch('/api/reset', { method: 'POST' });
+    await fetch(api('/reset'), { method: 'POST' });
     fetchState();
   }
 
@@ -571,6 +708,16 @@
   newUserInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addUser(); });
   pickBtn.addEventListener('click', pickUser);
   resetRoundBtn.addEventListener('click', resetRound);
+  document.getElementById('copyLinkBtn').addEventListener('click', async () => {
+    const shareLink = document.getElementById('shareLink');
+    try {
+      await navigator.clipboard.writeText(shareLink.value);
+      document.getElementById('copyLinkBtn').textContent = 'Copied';
+    } catch (error) {
+      shareLink.select();
+      document.execCommand('copy');
+    }
+  });
 
   fetchState();
   setInterval(fetchState, 2500);

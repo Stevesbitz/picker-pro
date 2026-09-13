@@ -19,13 +19,19 @@ class StateResponse(BaseModel):
     last_picked_user: Optional[User] = None
 
 
+class Room(BaseModel):
+    id: str
+    name: str
+
+
 class MemoryStore:
-    def __init__(self):
+    def __init__(self, seed_defaults: bool = True):
         self._lock = Lock()
         self._users: Dict[str, User] = {}
         self._last_picked_id: Optional[str] = None
         self._last_picked_user: Optional[User] = None
-        self._seed_default_users()
+        if seed_defaults:
+            self._seed_default_users()
 
     def _seed_default_users(self):
         for name in ["Mario", "Luigi", "Yoshi"]:
@@ -95,4 +101,29 @@ class MemoryStore:
                 u.pickedThisRound = False
 
 
-store = MemoryStore()
+class RoomStore:
+    """Owns a separate picker state for every shareable team room."""
+
+    def __init__(self):
+        self._lock = Lock()
+        self._rooms: Dict[str, Room] = {}
+        self._room_states: Dict[str, MemoryStore] = {}
+
+    def create_room(self, name: str) -> Room:
+        with self._lock:
+            room_id = uuid.uuid4().hex
+            room = Room(id=room_id, name=name)
+            self._rooms[room_id] = room
+            self._room_states[room_id] = MemoryStore(seed_defaults=False)
+            return room
+
+    def get_room(self, room_id: str) -> Optional[Room]:
+        with self._lock:
+            return self._rooms.get(room_id)
+
+    def get_state_store(self, room_id: str) -> Optional[MemoryStore]:
+        with self._lock:
+            return self._room_states.get(room_id)
+
+
+room_store = RoomStore()
