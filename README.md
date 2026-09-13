@@ -7,6 +7,7 @@ A lightweight, high-performance web application for fair, round-robin random sel
 ## Key Features
 
 * **Round-Robin Fair Picking:** Ensures every active user gets picked exactly once before the round resets automatically.
+* **Shareable Team Rooms:** Each team creates an isolated room and shares its unique link with members.
 * **Thread-Safe In-Memory Store:** Shared application state across active sessions backed by a thread-safe Python engine.
 * **Lightweight REST API:** Modular backend endpoints built with FastAPI and validated using Pydantic.
 * **Zero Dependencies Frontend:** Vanilla JS frontend with dark mode UI and native fetch API integration.
@@ -68,6 +69,14 @@ uvicorn app.main:app --reload
 Web Application: [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
 Swagger API Docs: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+## Team rooms
+
+Open the app root and create a room for a team. The app redirects to a unique
+room URL; share that URL with the team. Rosters, picks, and round status are
+isolated to that room. Anyone with the link can access the room, so treat it as
+the team's access key. Room data is currently in memory and resets when the
+server restarts.
 
 ## Running tests
 
