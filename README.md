@@ -10,6 +10,7 @@ A lightweight, high-performance web application for fair, round-robin random sel
 * **Shareable Team Rooms:** Each team creates an isolated room and shares its unique link with members.
 * **Thread-Safe In-Memory Store:** Shared application state across active sessions backed by a thread-safe Python engine.
 * **Lightweight REST API:** Modular backend endpoints built with FastAPI and validated using Pydantic.
+* **API Rate Limiting:** API requests are limited per client IP to help protect shared rooms from abuse.
 * **Zero Dependencies Frontend:** Vanilla JS frontend with dark mode UI and native fetch API integration.
 
 ---
@@ -76,6 +77,13 @@ Open the app root and create a room for a team. The app redirects to a unique
 room URL; share that URL with the team. Rosters, picks, and round status are
 isolated to that room. Anyone with the link can access the room, so treat it as
 the team's access key. Room data is currently in memory and resets when the
+server restarts.
+
+## API rate limiting
+
+Each client IP may make up to 120 API requests per rolling 60-second window.
+Requests over the limit receive a `429 Too Many Requests` response with a
+`Retry-After` header. The limiter is in memory, so its counters reset when the
 server restarts.
 
 ## Running tests

@@ -12,6 +12,27 @@ ROOM_ID = "team-room"
 
 
 class ApiHandlerTests(unittest.TestCase):
+    def test_rate_limiter_allows_requests_within_the_window(self):
+        limiter = main.ApiRateLimiter(max_requests=2, window_seconds=60)
+
+        self.assertIsNone(limiter.retry_after("client", now=100))
+        self.assertIsNone(limiter.retry_after("client", now=101))
+
+    def test_rate_limiter_rejects_excess_requests_and_recovers_after_window(self):
+        limiter = main.ApiRateLimiter(max_requests=2, window_seconds=60)
+        limiter.retry_after("client", now=100)
+        limiter.retry_after("client", now=101)
+
+        self.assertEqual(limiter.retry_after("client", now=102), 58)
+        self.assertIsNone(limiter.retry_after("client", now=160))
+
+    def test_rate_limiter_tracks_each_client_independently(self):
+        limiter = main.ApiRateLimiter(max_requests=1, window_seconds=60)
+        limiter.retry_after("first", now=100)
+
+        self.assertEqual(limiter.retry_after("first", now=101), 59)
+        self.assertIsNone(limiter.retry_after("second", now=101))
+
     @staticmethod
     def request(path: str) -> Request:
         return Request(
