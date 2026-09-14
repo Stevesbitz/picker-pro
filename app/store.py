@@ -24,6 +24,18 @@ class Room(BaseModel):
     name: str
 
 
+class AdminRoomSummary(BaseModel):
+    id: str
+    name: str
+    user_count: int
+    last_picked: Optional[str] = None
+
+
+class AdminDashboardData(BaseModel):
+    active_sessions: int
+    rooms: List[AdminRoomSummary]
+
+
 class MemoryStore:
     def __init__(self, seed_defaults: bool = True):
         self._lock = Lock()
@@ -111,7 +123,7 @@ class RoomStore:
 
     def create_room(self, name: str) -> Room:
         with self._lock:
-            room_id = uuid.uuid4().hex
+            room_id = uuid.uuid4().hex[:8]
             room = Room(id=room_id, name=name)
             self._rooms[room_id] = room
             self._room_states[room_id] = MemoryStore(seed_defaults=False)
@@ -124,6 +136,26 @@ class RoomStore:
     def get_state_store(self, room_id: str) -> Optional[MemoryStore]:
         with self._lock:
             return self._room_states.get(room_id)
+
+    def get_admin_dashboard_data(self) -> AdminDashboardData:
+        with self._lock:
+            summaries = []
+            for room_id, room in self._rooms.items():
+                store = self._room_states[room_id]
+                state = store.get_state()
+                last_name = state.last_picked_user.name if state.last_picked_user else None
+                summaries.append(
+                    AdminRoomSummary(
+                        id=room_id,
+                        name=room.name,
+                        user_count=len(state.users),
+                        last_picked=last_name,
+                    )
+                )
+            return AdminDashboardData(
+                active_sessions=len(summaries),
+                rooms=summaries,
+            )
 
 
 room_store = RoomStore()
