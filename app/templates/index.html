@@ -1,526 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>pickerPro®</title>
-<style>
-  :root {
-    --bg-base: #f8fafc;
-    --bg-surface: #ffffff;
-    --border-color: #e2e8f0;
-    
-    --text-primary: #1e293b;
-    --text-secondary: #64748b;
-    --text-muted: #94a3b8;
-    
-    --accent: #c2410c; /* Warm terracotta */
-    --accent-hover: #9a3412;
-    --accent-light: #fff7ed;
-    
-    --success: #15803d;
-    --success-bg: #f0fdf4;
-    --danger: #dc2626;
-    --danger-bg: #fef2f2;
-    
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  }
-
-  * { box-sizing: border-box; }
-  
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background-color: var(--bg-base);
-    color: var(--text-primary);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  /* Structural Sections */
-  header {
-    width: 100%;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    background: linear-gradient(135deg, #f1f5f9, #eaf0f6);
-    border-bottom: 1px solid var(--border-color);
-    padding: 1rem 1.25rem;
-    text-align: left;
-  }
-
-  .header-brand {
-    min-width: 0;
-  }
-
-  main {
-    width: 100%;
-    max-width: 520px;
-    padding: 1.5rem 1rem;
-    flex: 1;
-  }
-
-  footer {
-    width: 100%;
-    background: #f1f5f9;
-    border-top: 1px solid var(--border-color);
-    padding: 1rem;
-    text-align: center;
-    font-size: 0.78rem;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-    color: var(--text-secondary);
-    margin-top: auto;
-  }
-
-  /* Header Typography */
-  h1 {
-    font-size: 1.3rem;
-    font-weight: 700;
-    letter-spacing: -0.025em;
-    margin: 0;
-    color: var(--text-primary);
-  }
-  
-  .subtitle {
-    color: var(--text-secondary);
-    font-size: 0.72rem;
-    font-weight: 500;
-    letter-spacing: 0.01em;
-    margin: 0.18rem 0 0;
-  }
-
-  /* Cards & Components */
-  .card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-    box-shadow: var(--shadow-sm);
-  }
-
-  /* Collapsible User Guide */
-  .guide-details {
-    position: relative;
-    flex: 0 0 auto;
-  }
-
-  .guide-summary {
-    padding: 0.45rem 0.65rem;
-    border: 1px solid #fed7aa;
-    border-radius: 8px;
-    background: var(--accent-light);
-    font-weight: 600;
-    font-size: 0.78rem;
-    color: var(--accent);
-    cursor: pointer;
-    user-select: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .guide-content {
-    position: absolute;
-    z-index: 10;
-    top: calc(100% + 0.5rem);
-    right: 0;
-    width: min(280px, calc(100vw - 2.5rem));
-    padding: 0.9rem 1rem 0.7rem;
-    border: 1px solid #fed7aa;
-    border-radius: 10px;
-    background: var(--bg-surface);
-    box-shadow: var(--shadow-md);
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    line-height: 1.5;
-  }
-
-  .guide-content ol {
-    margin: 0;
-    padding-left: 1.2rem;
-  }
-
-  .guide-content li {
-    margin-bottom: 0.4rem;
-  }
-
-  @media (max-width: 420px) {
-    header { padding: 0.85rem 1rem; }
-    .guide-summary span:first-child { display: none; }
-    .guide-summary { padding: 0.45rem 0.55rem; }
-  }
-
-  /* Display Banner */
-  .result-box {
-    border-radius: 12px;
-    background: linear-gradient(135deg, #ea580c, #c2410c);
-    color: #ffffff;
-    padding: 1.5rem 1rem;
-    text-align: center;
-    margin-bottom: 1rem;
-    box-shadow: var(--shadow-md);
-    transition: all 0.2s ease;
-  }
-
-  .result-box.empty {
-    background: var(--bg-surface);
-    border: 1px dashed var(--border-color);
-    color: var(--text-muted);
-    box-shadow: none;
-  }
-
-  .result-name {
-    font-size: 1.5rem;
-    font-weight: 700;
-  }
-
-  .result-time {
-    font-size: 0.8rem;
-    margin-top: 0.35rem;
-    opacity: 0.9;
-  }
-
-  /* Controls & Buttons */
-  .controls-row {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .controls-row button {
-    flex: 1;
-  }
-
-  button {
-    cursor: pointer;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    padding: 0.65rem 1rem;
-    font-weight: 600;
-    transition: background-color 0.15s ease;
-  }
-
-  .btn-primary {
-    background-color: var(--accent);
-    color: #ffffff;
-  }
-
-  .btn-primary:hover {
-    background-color: var(--accent-hover);
-  }
-
-  .btn-primary:disabled {
-    background-color: var(--border-color);
-    color: var(--text-muted);
-    cursor: not-allowed;
-  }
-
-  #pickBtn {
-    background-color: var(--success);
-  }
-
-  #pickBtn:hover {
-    background-color: #166534;
-  }
-
-  #pickBtn:disabled {
-    background-color: var(--border-color);
-    color: var(--text-muted);
-  }
-
-  #resetRoundBtn {
-    border-color: #fecaca;
-    background-color: var(--danger-bg);
-    color: var(--danger);
-  }
-
-  #resetRoundBtn:hover {
-    border-color: var(--danger);
-    background-color: #fee2e2;
-    color: #b91c1c;
-  }
-
-  .btn-secondary {
-    background-color: transparent;
-    color: var(--text-secondary);
-    border: 1px solid var(--border-color);
-  }
-
-  .btn-secondary:hover {
-    background-color: var(--bg-base);
-    color: var(--text-primary);
-  }
-
-  .status {
-    margin-top: 0.75rem;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    text-align: center;
-  }
-
-  .room-name {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    margin: 0.7rem 0 0;
-    padding: 0.35rem 0.65rem 0.35rem 0.45rem;
-    border: 1px solid #fed7aa;
-    border-radius: 999px;
-    background: var(--accent-light);
-    color: var(--accent);
-    font-size: 0.78rem;
-    font-weight: 700;
-  }
-
-  .room-name::before {
-    content: "";
-    width: 0.45rem;
-    height: 0.45rem;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 0 3px #ffedd5;
-  }
-
-  .room-name-label {
-    color: #9a3412;
-    font-size: 0.64rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .room-name-title {
-    color: var(--text-primary);
-  }
-
-  .share-row {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-  }
-
-  .share-link {
-    min-width: 0;
-    flex: 1;
-    padding: 0.55rem 0.65rem;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    color: var(--text-secondary);
-    background: var(--bg-base);
-  }
-
-  .room-flow {
-    display: flex;
-    align-items: stretch;
-    gap: 0.35rem;
-    margin: 1rem 0 1.25rem;
-  }
-
-  .flow-step {
-    flex: 1;
-    min-width: 0;
-    padding: 0.65rem 0.45rem;
-    border: 1px solid #fed7aa;
-    border-radius: 10px;
-    background: var(--accent-light);
-    text-align: center;
-  }
-
-  .flow-number {
-    display: block;
-    margin-bottom: 0.22rem;
-    color: var(--accent);
-    font-size: 0.66rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-  }
-
-  .flow-label {
-    display: block;
-    color: var(--text-primary);
-    font-size: 0.76rem;
-    font-weight: 700;
-  }
-
-  .flow-arrow {
-    align-self: center;
-    color: var(--accent);
-    font-size: 0.9rem;
-  }
-
-  /* Inputs & List Items */
-  .add-row {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .add-row input[type="text"] {
-    flex: 1;
-    padding: 0.6rem 0.75rem;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-surface);
-    color: var(--text-primary);
-    font-size: 0.9rem;
-  }
-
-  .add-row input[type="text"]:focus {
-    outline: 2px solid var(--accent);
-  }
-
-  ul.user-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    max-height: 280px;
-    overflow-y: auto;
-  }
-
-  ul.user-list li {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    padding: 0.6rem 0.25rem;
-    border-bottom: 1px solid var(--border-color);
-  }
-
-  ul.user-list li:last-child {
-    border-bottom: none;
-  }
-
-  ul.user-list li.picked-round {
-    opacity: 0.5;
-  }
-
-  ul.user-list li label {
-    flex: 1;
-    font-size: 0.9rem;
-    cursor: pointer;
-    color: var(--text-primary);
-  }
-
-  ul.user-list li input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    accent-color: var(--accent);
-    cursor: pointer;
-  }
-
-  .badge {
-    font-size: 0.75rem;
-    padding: 0.15rem 0.5rem;
-    border-radius: 999px;
-    background: var(--bg-base);
-    color: var(--text-secondary);
-  }
-
-  .badge.done {
-    background: var(--success-bg);
-    color: var(--success);
-  }
-
-  .remove-btn {
-    background: transparent;
-    color: var(--text-muted);
-    padding: 0.2rem 0.4rem;
-    font-size: 0.9rem;
-  }
-
-  .remove-btn:hover {
-    background: var(--danger-bg);
-    color: var(--danger);
-  }
-
-  .empty-state {
-    color: var(--text-muted);
-    font-size: 0.875rem;
-    text-align: center;
-    padding: 1rem 0;
-  }
-
-  /* Thinking Modal */
-  .modal-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15, 23, 42, 0.4);
-    backdrop-filter: blur(4px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-  }
-
-  .modal-overlay.active {
-    display: flex;
-  }
-
-  .modal-card {
-    background: var(--bg-surface);
-    border-radius: 16px;
-    padding: 2rem;
-    text-align: center;
-    width: 90%;
-    max-width: 340px;
-    box-shadow: var(--shadow-md);
-  }
-
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--border-color);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    margin: 0 auto 1rem auto;
-  }
-
-  .shuffling-name {
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: var(--accent);
-    min-height: 1.8rem;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pickerPro®</title>
+  <link rel="stylesheet" href="/static/styles.css" />
 </head>
-<body data-room-id="{{ room.id if room else '' }}">
+<body data-room-id="{{ room.id if room else '' }}" data-is-admin="{{ 'true' if is_admin else 'false' }}">
 
 <header>
   <div class="header-brand">
-    <h1>pickerPro®</h1>
+    <a href="/" style="text-decoration: none; color: inherit; display: inline-block;">
+      <h1>pickerPro®</h1>
+    </a>
     <p class="subtitle">A shared, fair way to choose who’s next.</p>
-    {% if room %}<div class="room-name"><span class="room-name-label">Team room</span><span class="room-name-title">{{ room.name }}</span></div>{% endif %}
+    {% if room %}
+      <div class="room-name">
+        <span class="room-name-label">Team room</span>
+        <span class="room-name-title">{{ room.name }}</span>
+      </div>
+    {% endif %}
   </div>
-  {% if room %}
-  <details class="guide-details">
-    <summary class="guide-summary">
-      <span>How to use this app</span>
-      <span>▼</span>
-    </summary>
-    <div class="guide-content">
-      <ol>
-        <li>Add names to the roster or toggle individual checkmarks to set eligibility.</li>
-        <li>Click <strong>Pick Next User</strong> to perform a fair selection.</li>
-        <li>Every eligible candidate is selected once per round without back-to-back repeats.</li>
-        <li>State updates continuously across all connected viewers.</li>
-      </ol>
-    </div>
-  </details>
-  {% endif %}
+
+  <div class="header-actions">
+    {% if is_admin %}
+      <button id="adminLogoutBtn" class="btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">Logout</button>
+    {% elif not room and not is_login_page %}
+      <a href="/admin/login" class="btn-secondary btn-link" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">Admin Access</a>
+    {% endif %}
+
+    {% if room and not is_admin and not is_login_page %}
+    <details class="guide-details">
+      <summary class="guide-summary">
+        <span>How to use</span>
+        <span>▼</span>
+      </summary>
+      <div class="guide-content">
+        <ol>
+          <li>Add names to the roster or toggle individual checkmarks to set eligibility.</li>
+          <li>Click <strong>Pick Next User</strong> to perform a fair selection.</li>
+          <li>Every eligible candidate is selected once per round without back-to-back repeats.</li>
+          <li>State updates continuously across all connected viewers.</li>
+        </ol>
+      </div>
+    </details>
+    {% endif %}
+  </div>
 </header>
 
 <main>
-  {% if not room %}
+  {% if is_login_page %}
+  <!-- Separate Admin Login Page -->
+  <div class="card" style="max-width: 400px; margin: 2rem auto;">
+    <h2 style="margin-top:0; font-size:1.1rem; text-align:center;">Admin Portal</h2>
+    <p style="font-size:0.8rem; color:var(--text-secondary); text-align:center; margin-bottom: 1.25rem;">
+      Enter your passkey to manage system sessions and team rosters.
+    </p>
+    <form id="adminLoginForm" onsubmit="return false;">
+      <div class="add-row" style="flex-direction: column; gap: 0.75rem;">
+        <input type="password" id="adminKeyInput" placeholder="Enter admin passkey..." required />
+        <button type="submit" id="adminLoginBtn" class="btn-primary">Authenticate</button>
+      </div>
+    </form>
+    <div id="adminAuthStatus" class="status"></div>
+    <div style="text-align: center; margin-top: 1rem;">
+      <a href="/" style="font-size: 0.8rem; color: var(--text-secondary);">← Back to App</a>
+    </div>
+  </div>
+
+  {% elif is_admin %}
+  <!-- Admin Dashboard View -->
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h2 style="margin:0; font-size:1.1rem;">Admin Dashboard</h2>
+    </div>
+
+    <!-- Overview Stats -->
+    <div class="admin-grid">
+      <div class="admin-stat-card">
+        <div id="statTotalRooms" class="admin-stat-num">0</div>
+        <div class="admin-stat-label">Total Rooms</div>
+      </div>
+      <div class="admin-stat-card">
+        <div id="statTotalUsers" class="admin-stat-num">0</div>
+        <div class="admin-stat-label">Total Members</div>
+      </div>
+      <div class="admin-stat-card">
+        <div id="statActiveSessions" class="admin-stat-num">0</div>
+        <div class="admin-stat-label">Active Sessions</div>
+      </div>
+    </div>
+
+    <!-- Active Sessions & Room Data Table -->
+    <strong style="font-size:0.9rem; display:block; margin-bottom: 0.5rem;">Active Rooms &amp; Roster Sessions</strong>
+    <div style="overflow-x: auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Room ID</th>
+            <th>Name</th>
+            <th>Users</th>
+            <th>Last Pick</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="adminSessionsList">
+          <tr><td colspan="5" class="empty-state">Loading room sessions...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% elif not room %}
+  <!-- Home Page / Room Creation View -->
   <div class="card">
     <h2 style="margin-top:0; font-size:1.1rem;">Start your team’s picker</h2>
     <div class="room-flow" aria-label="Create, share, and pick flow">
@@ -536,14 +128,14 @@
     </div>
     <div id="status" class="status"></div>
   </div>
+
   {% else %}
-  <!-- Last Pick Display -->
+  <!-- Room Picker View -->
   <div id="resultContainer" class="result-box empty">
     <div id="resultName" class="result-name">No one picked yet</div>
     <div id="resultTime" class="result-time" style="display:none;"></div>
   </div>
 
-  <!-- Primary Action Controls -->
   <div class="card">
     <strong style="font-size:0.9rem;">Share this room</strong>
     <div class="share-row">
@@ -560,7 +152,6 @@
     <div id="status" class="status"></div>
   </div>
 
-  <!-- Roster Management -->
   <div class="card">
     <div class="add-row">
       <input type="text" id="newUserInput" placeholder="Enter a name..." maxlength="60" />
@@ -588,12 +179,98 @@
 <script>
 (function () {
   const roomId = document.body.dataset.roomId;
-  const api = (path) => `/api/rooms/${roomId}${path}`;
+  const isAdmin = document.body.dataset.isAdmin === 'true';
 
+  // Logout Handler
+  const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+  if (adminLogoutBtn) {
+    adminLogoutBtn.addEventListener('click', async () => {
+      await fetch('/api/admin/logout', { method: 'POST' });
+      window.location.href = '/';
+    });
+  }
+
+  // Separate Login Page View Logic
+  const adminLoginForm = document.getElementById('adminLoginForm');
+  if (adminLoginForm) {
+    const adminKeyInput = document.getElementById('adminKeyInput');
+    const adminAuthStatus = document.getElementById('adminAuthStatus');
+
+    adminLoginForm.addEventListener('submit', async () => {
+      const key = adminKeyInput.value.trim();
+      if (!key) return;
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passkey: key })
+        });
+        if (res.ok) {
+          window.location.href = '/admin';
+        } else {
+          adminAuthStatus.textContent = 'Invalid passkey.';
+        }
+      } catch (e) {
+        adminAuthStatus.textContent = 'Login failed.';
+      }
+    });
+    return;
+  }
+
+  // Admin Dashboard View Logic
+  if (isAdmin) {
+    const adminSessionsList = document.getElementById('adminSessionsList');
+    const statTotalRooms = document.getElementById('statTotalRooms');
+    const statTotalUsers = document.getElementById('statTotalUsers');
+    const statActiveSessions = document.getElementById('statActiveSessions');
+
+    async function fetchAdminData() {
+      try {
+        const res = await fetch('/api/admin/sessions');
+        if (res.status === 401) {
+          window.location.href = '/admin/login';
+          return;
+        }
+        const data = await res.json();
+        
+        statTotalRooms.textContent = data.rooms.length;
+        statTotalUsers.textContent = data.rooms.reduce((acc, r) => acc + r.user_count, 0);
+        statActiveSessions.textContent = data.active_sessions || data.rooms.length;
+
+        adminSessionsList.innerHTML = '';
+        if (data.rooms.length === 0) {
+          adminSessionsList.innerHTML = '<tr><td colspan="5" class="empty-state">No active sessions found.</td></tr>';
+          return;
+        }
+
+        data.rooms.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><code>${r.id}</code></td>
+            <td><strong>${r.name}</strong></td>
+            <td>${r.user_count}</td>
+            <td>${r.last_picked ? r.last_picked : '—'}</td>
+            <td><a href="/rooms/${r.id}" class="btn-secondary" style="padding: 0.2rem 0.5rem; font-size:0.75rem; text-decoration:none;">Join</a></td>
+          `;
+          adminSessionsList.appendChild(tr);
+        });
+      } catch (e) {
+        console.error('Error fetching admin data:', e);
+      }
+    }
+
+    fetchAdminData();
+    setInterval(fetchAdminData, 5000);
+    return;
+  }
+
+  // Room Creation View
   if (!roomId) {
     const newRoomInput = document.getElementById('newRoomInput');
     const createRoomBtn = document.getElementById('createRoomBtn');
     const statusEl = document.getElementById('status');
+
+    if (!createRoomBtn) return;
 
     async function createRoom() {
       const name = newRoomInput.value.trim();
@@ -622,6 +299,8 @@
     return;
   }
 
+  // Room Selection View
+  const api = (path) => `/api/rooms/${roomId}${path}`;
   let cachedUsers = [];
   let shuffleInterval = null;
   let isPicking = false;
