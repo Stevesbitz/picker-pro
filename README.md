@@ -83,8 +83,7 @@ server restarts.
 
 Each client IP may make up to 120 API requests per rolling 60-second window.
 Requests over the limit receive a `429 Too Many Requests` response with a
-`Retry-After` header. The limiter is in memory, so its counters reset when the
-server restarts.
+`Retry-After` header. The limiter is in memory, so its counters reset when the server restarts.
 
 ## Running tests
 
