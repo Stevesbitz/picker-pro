@@ -109,6 +109,20 @@ def error_page(request: Request, status_code: int, title: str, message: str):
         status_code=status_code,
     )
 
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Handle unhandled exceptions without exposing internal details."""
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"}
+    )
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Handle unhandled exceptions without exposing internal details."""
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"}
+    )
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
