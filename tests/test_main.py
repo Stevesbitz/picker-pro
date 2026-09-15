@@ -252,3 +252,21 @@ class ApiHandlerTests(unittest.TestCase):
                 main.update_slack_channel(ROOM_ID, main.UpdateSlackChannelRequest(channel_id="C0123456789"))
 
         self.assertEqual(error.exception.status_code, 404)
+
+    def test_admin_system_status_requires_authentication(self):
+        request = self.request("/api/admin/system")
+        with self.assertRaises(HTTPException) as error:
+            main.get_admin_system_status(request)
+
+        self.assertEqual(error.exception.status_code, 401)
+
+    def test_admin_system_status_reports_safe_runtime_configuration(self):
+        request = Mock()
+        request.cookies = {main.ADMIN_COOKIE_KEY: main.ADMIN_PASSKEY}
+        with patch("app.main.room_store") as store, patch("app.main.get_slack_notifier") as get_notifier:
+            get_notifier.return_value.is_configured = True
+            response = main.get_admin_system_status(request)
+
+        self.assertEqual(response["storage_backend"], type(store).__name__)
+        self.assertTrue(response["slack_configured"])
+        self.assertNotIn("token", response)
