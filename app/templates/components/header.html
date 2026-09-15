@@ -1,0 +1,37 @@
+<header>
+  <div class="header-brand">
+    <a href="/" class="brand-link">
+      <h1>pickerPro®</h1>
+    </a>
+    <p class="subtitle">A shared, fair way to choose who’s next.</p>
+    {% if room %}
+      <div class="room-name">
+        <span class="room-name-label">Team room</span>
+        <span class="room-name-title">{{ room.name }}</span>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="header-actions">
+    {% if is_admin %}
+      <button id="adminLogoutBtn" class="btn-secondary">Logout</button>
+    {% endif %}
+
+    {% if room and not is_admin and not is_login_page %}
+    <details class="guide-details">
+      <summary class="guide-summary">
+        <span>How to use</span>
+        <span>▼</span>
+      </summary>
+      <div class="guide-content">
+        <ol>
+          <li>Add names to the roster or toggle individual checkmarks to set eligibility.</li>
+          <li>Click <strong>Pick Next User</strong> to perform a fair selection.</li>
+          <li>Every eligible candidate is selected once per round without back-to-back repeats.</li>
+          <li>State updates continuously across all connected viewers.</li>
+        </ol>
+      </div>
+    </details>
+    {% endif %}
+  </div>
+</header>

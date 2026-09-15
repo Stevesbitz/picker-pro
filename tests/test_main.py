@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from fastapi import HTTPException, Request
 
 from app import main
-from app.store import Room, StateResponse, User
+from app.store import Room, StateResponse, TaskPool, User
 
 
 ROOM_ID = "team-room"
@@ -204,3 +204,51 @@ class ApiHandlerTests(unittest.TestCase):
 
         self.assertEqual(response, {"status": "success"})
         state_store.reset_round.assert_called_once_with()
+
+    def test_notify_slack_sends_the_last_pick_for_the_requested_pool(self):
+        user = User(id="user-1", name="Ada", pool_id="pool-1")
+        state_store = Mock()
+        state_store.get_state.return_value = StateResponse(users=[user], last_picked_user=user, pool_id="pool-1")
+        service = Mock()
+        service.list_pools.return_value = [TaskPool(id="pool-1", name="Standup")]
+        service.get_room.return_value = Room(id=ROOM_ID, name="Engineering")
+        notifier = Mock()
+        notifier.is_configured = True
+        with patch("app.main.get_room_state_or_404", return_value=state_store), patch(
+            "app.main.get_room_service", return_value=service
+        ), patch("app.main.get_slack_notifier", return_value=notifier):
+            response = main.notify_slack(ROOM_ID, "pool-1")
+
+        self.assertEqual(response, {"status": "sent", "user": "Ada", "pool": "Standup"})
+        notifier.send_assignment.assert_called_once_with(user, "Engineering", "Standup")
+
+    def test_notify_slack_requires_a_previous_selection(self):
+        state_store = Mock()
+        state_store.get_state.return_value = StateResponse(users=[])
+        with patch("app.main.get_room_state_or_404", return_value=state_store):
+            with self.assertRaises(HTTPException) as error:
+                main.notify_slack(ROOM_ID)
+
+        self.assertEqual(error.exception.status_code, 404)
+
+    def test_update_slack_channel_saves_a_trimmed_room_channel_id(self):
+        room = Room(id=ROOM_ID, name="Engineering")
+        service = Mock()
+        service.get_room.return_value = room
+        service.save_room.return_value = room
+        with patch("app.main.get_room_service", return_value=service):
+            response = main.update_slack_channel(
+                ROOM_ID, main.UpdateSlackChannelRequest(channel_id="  C0123456789  ")
+            )
+
+        self.assertEqual(response.slack_channel_id, "C0123456789")
+        service.save_room.assert_called_once_with(room)
+
+    def test_update_slack_channel_rejects_an_unknown_room(self):
+        service = Mock()
+        service.get_room.return_value = None
+        with patch("app.main.get_room_service", return_value=service):
+            with self.assertRaises(HTTPException) as error:
+                main.update_slack_channel(ROOM_ID, main.UpdateSlackChannelRequest(channel_id="C0123456789"))
+
+        self.assertEqual(error.exception.status_code, 404)
