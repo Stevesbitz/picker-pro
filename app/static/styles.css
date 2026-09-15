@@ -48,6 +48,7 @@ header {
 .header-brand { min-width: 0; }
 .header-actions { display: flex; align-items: center; gap: 0.5rem; }
 .brand-link { text-decoration: none; color: inherit; display: inline-block; }
+.brand-logo { display: block; width: min(220px, 52vw); height: auto; aspect-ratio: 4 / 1; }
 
 main {
   width: 100%;
@@ -87,10 +88,11 @@ h2 { margin-top: 0; font-size: 1.1rem; }
 .eyebrow { margin: 0 0 0.8rem; color: var(--accent); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
 .hero-copy h2 { max-width: 590px; margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2.25rem, 6vw, 4.2rem); line-height: 0.98; letter-spacing: -0.03em; font-weight: 500; }
 .hero-description { max-width: 430px; margin: 1.25rem 0 0; color: var(--text-secondary); font-size: 1rem; line-height: 1.6; }
-.hero-mark { display: flex; align-items: center; gap: 0.45rem; margin-top: 2rem; }
-.hero-mark-dot { width: 0.85rem; height: 0.85rem; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 5px #ffedd5; }
-.hero-mark-dot-small { width: 0.45rem; height: 0.45rem; background: var(--success); box-shadow: 0 0 0 4px #dcfce7; }
-.hero-mark-line { width: 4.5rem; height: 1px; background: var(--border-color); }
+.hero-proof { display: flex; align-items: center; gap: 0.75rem; max-width: 20rem; margin-top: 2rem; }
+.hero-proof-icon { display: grid; place-items: center; width: 1.8rem; height: 1.8rem; flex: 0 0 auto; border-radius: 50%; background: var(--success-bg); color: var(--success); box-shadow: 0 0 0 5px #dcfce7; font-size: 0.85rem; font-weight: 800; }
+.hero-proof-copy { display: flex; flex-direction: column; gap: 0.18rem; }
+.hero-proof-copy strong { color: var(--text-primary); font-size: 0.8rem; }
+.hero-proof-copy span { color: var(--text-secondary); font-size: 0.75rem; line-height: 1.4; }
 .room-create-panel { padding: 1.35rem; border: 1px solid #fed7aa; border-radius: 12px; background: linear-gradient(145deg, #fffaf5, #ffffff 68%); box-shadow: 0 14px 32px rgb(154 52 18 / 0.08); }
 .panel-heading { display: flex; gap: 0.75rem; align-items: flex-start; margin-bottom: 1.35rem; }
 .panel-index { display: grid; place-items: center; width: 2rem; height: 2rem; flex: 0 0 auto; border-radius: 50%; background: var(--accent); color: #ffffff; font-size: 0.7rem; font-weight: 800; }

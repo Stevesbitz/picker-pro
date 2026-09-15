@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100" width="100%" height="100%">
+  <defs>
+    <!-- Vibrant Gradient Accent -->
+    <linearGradient id="pickerProGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ea580c" />
+      <stop offset="100%" stop-color="#c2410c" />
+    </linearGradient>
+    
+    <!-- Soft Drop Shadow for Depth -->
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#c2410c" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Mark / Icon Group -->
+  <g transform="translate(10, 10)" filter="url(#softShadow)">
+    <!-- Outer Arc Segment 1 -->
+    <path d="M 40,8 A 32,32 0 0,1 72,40" fill="none" stroke="url(#pickerProGradient)" stroke-width="7" stroke-linecap="round" />
+    
+    <!-- Outer Arc Segment 2 -->
+    <path d="M 72,40 A 32,32 0 0,1 40,72" fill="none" stroke="url(#pickerProGradient)" stroke-width="7" stroke-linecap="round" stroke-dasharray="1 10" />
+    
+    <!-- Outer Arc Segment 3 -->
+    <path d="M 40,72 A 32,32 0 0,1 8,40" fill="none" stroke="url(#pickerProGradient)" stroke-width="7" stroke-linecap="round" />
+    
+    <!-- Outer Arc Segment 4 -->
+    <path d="M 8,40 A 32,32 0 0,1 40,8" fill="none" stroke="url(#pickerProGradient)" stroke-width="7" stroke-linecap="round" stroke-dasharray="1 10" />
+
+    <!-- Center Selection Circle -->
+    <circle cx="40" cy="40" r="22" fill="url(#pickerProGradient)" />
+
+    <!-- Checked / Picked Mark -->
+    <path d="M 31,40 L 37,46 L 49,34" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+
+  <!-- Brand Typography -->
+  <text x="102" y="58" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="40" font-weight="800" fill="#1e293b" letter-spacing="-1.5">
+    picker<tspan fill="url(#pickerProGradient)">Pro</tspan><tspan font-size="20" font-weight="600" dy="-18" fill="#94a3b8">®</tspan>
+  </text>
+</svg>
