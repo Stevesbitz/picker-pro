@@ -1,77 +1,34 @@
-import random
-import uuid
-from datetime import datetime, timezone
-from threading import Lock
-from typing import Dict, Optional
+from typing import Optional
 
 from app.schemas.users import StateResponse, User
+from app.store.base import StateStore
+
+DEFAULT_POOL_ID = "default"
 
 
 class PickerService:
-    """Thread-safe in-memory state and fairness rules for one room."""
+    """Application service for picker operations backed by an injected store."""
 
-    def __init__(self, seed_defaults: bool = False):
-        self._lock = Lock()
-        self._users: Dict[str, User] = {}
-        self._last_picked_id: Optional[str] = None
-        self._last_picked_user: Optional[User] = None
-        if seed_defaults:
-            self._seed_default_users()
+    def __init__(self, state_store: StateStore):
+        self._state_store = state_store
 
-    def _seed_default_users(self) -> None:
-        for name in ("Mario", "Luigi", "Yoshi"):
-            self.add_user(name)
+    def get_state(self, pool_id: Optional[str] = None) -> StateResponse:
+        return self._state_store.get_state(pool_id) if pool_id else self._state_store.get_state()
 
-    def get_state(self) -> StateResponse:
-        with self._lock:
-            return StateResponse(users=list(self._users.values()), last_picked_user=self._last_picked_user)
+    def add_user(self, name: str, pool_id: Optional[str] = None) -> User:
+        return self._state_store.add_user(name, pool_id) if pool_id else self._state_store.add_user(name)
 
-    def add_user(self, name: str) -> User:
-        with self._lock:
-            user = User(id=uuid.uuid4().hex[:8], name=name)
-            self._users[user.id] = user
-            return user
+    def toggle_check(self, user_id: str, checked: bool, pool_id: Optional[str] = None) -> Optional[User]:
+        return self._state_store.toggle_check(user_id, checked, pool_id) if pool_id else self._state_store.toggle_check(user_id, checked)
 
-    def toggle_check(self, user_id: str, checked: bool) -> Optional[User]:
-        with self._lock:
-            user = self._users.get(user_id)
-            if user:
-                user.checked = checked
-            return user
+    def toggle_ooo(self, user_id: str, is_ooo: bool, pool_id: Optional[str] = None) -> Optional[User]:
+        return self._state_store.toggle_ooo(user_id, is_ooo, pool_id) if pool_id else self._state_store.toggle_ooo(user_id, is_ooo)
 
-    def delete_user(self, user_id: str) -> bool:
-        with self._lock:
-            if self._last_picked_id == user_id:
-                self._last_picked_id = None
-                self._last_picked_user = None
-            return self._users.pop(user_id, None) is not None
+    def delete_user(self, user_id: str, pool_id: Optional[str] = None) -> bool:
+        return self._state_store.delete_user(user_id, pool_id) if pool_id else self._state_store.delete_user(user_id)
 
-    def pick_next(self) -> Optional[User]:
-        with self._lock:
-            checked_users = [user for user in self._users.values() if user.checked]
-            if not checked_users:
-                return None
+    def pick_next(self, pool_id: Optional[str] = None) -> Optional[User]:
+        return self._state_store.pick_next(pool_id) if pool_id else self._state_store.pick_next()
 
-            eligible = [user for user in checked_users if not user.pickedThisRound]
-            if not eligible:
-                for user in checked_users:
-                    user.pickedThisRound = False
-                eligible = checked_users
-
-            candidates = eligible
-            if self._last_picked_id and len(checked_users) > 1:
-                without_last = [user for user in eligible if user.id != self._last_picked_id]
-                if without_last:
-                    candidates = without_last
-
-            chosen = random.choice(candidates)
-            chosen.pickedThisRound = True
-            chosen.picked_at = datetime.now(timezone.utc).isoformat()
-            self._last_picked_id = chosen.id
-            self._last_picked_user = chosen
-            return chosen
-
-    def reset_round(self) -> None:
-        with self._lock:
-            for user in self._users.values():
-                user.pickedThisRound = False
+    def reset_round(self, pool_id: Optional[str] = None) -> None:
+        self._state_store.reset_round(pool_id) if pool_id else self._state_store.reset_round()

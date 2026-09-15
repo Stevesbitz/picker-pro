@@ -1,30 +1,38 @@
-import uuid
-from threading import Lock
-from typing import Dict, Optional
+from typing import List, Optional
 
-from app.schemas.rooms import Room
+from app.schemas.rooms import Room, TaskPool
 from app.services.picker import PickerService
+from app.schemas.rooms import AdminDashboardData
+from app.store.base import BaseRoomStore, StateStore
 
 
 class RoomService:
-    """Creates rooms and owns their isolated picker services."""
+    """Application service for room and task-pool operations."""
 
-    def __init__(self):
-        self._lock = Lock()
-        self._rooms: Dict[str, Room] = {}
-        self._pickers: Dict[str, PickerService] = {}
+    def __init__(self, room_store: BaseRoomStore):
+        self._room_store = room_store
 
     def create_room(self, name: str) -> Room:
-        with self._lock:
-            room = Room(id=uuid.uuid4().hex, name=name)
-            self._rooms[room.id] = room
-            self._pickers[room.id] = PickerService()
-            return room
+        return self._room_store.create_room(name)
 
     def get_room(self, room_id: str) -> Optional[Room]:
-        with self._lock:
-            return self._rooms.get(room_id)
+        return self._room_store.get_room(room_id)
+
+    def save_room(self, room: Room) -> Room:
+        return self._room_store.save_room(room)
 
     def get_picker(self, room_id: str) -> Optional[PickerService]:
-        with self._lock:
-            return self._pickers.get(room_id)
+        state_store = self._room_store.get_state_store(room_id)
+        return PickerService(state_store) if state_store else None
+
+    def get_state_store(self, room_id: str) -> Optional[StateStore]:
+        return self._room_store.get_state_store(room_id)
+
+    def get_admin_dashboard_data(self) -> AdminDashboardData:
+        return self._room_store.get_admin_dashboard_data()
+
+    def create_pool(self, room_id: str, name: str) -> TaskPool:
+        return self._room_store.create_pool(room_id, name)
+
+    def list_pools(self, room_id: str) -> List[TaskPool]:
+        return self._room_store.list_pools(room_id)

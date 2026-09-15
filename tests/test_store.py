@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime
 from unittest.mock import patch
 
-from app.store import MemoryStore, RoomStore
+from app.store import DEFAULT_POOL_ID, MemoryStore, RoomStore
 
 
 class MemoryStoreTests(unittest.TestCase):
@@ -102,6 +102,27 @@ class MemoryStoreTests(unittest.TestCase):
         self.assertFalse(any(user.pickedThisRound for user in state.users))
         self.assertEqual(state.last_picked_user.id, ada.id)
 
+    def test_ooo_users_are_kept_in_state_but_excluded_from_picks(self):
+        ada, grace = self.add_users("Ada", "Grace")
+        self.store.toggle_ooo(ada.id, True)
+
+        with patch("app.store.random.choice", return_value=grace):
+            picked = self.store.pick_next()
+
+        self.assertEqual(picked.id, grace.id)
+        self.assertTrue(next(user for user in self.store.get_state().users if user.id == ada.id).is_ooo)
+
+    def test_pools_keep_users_and_rounds_isolated(self):
+        standup_user = self.store.add_user("Ada", pool_id="standup")
+        review_user = self.store.add_user("Grace", pool_id="review")
+
+        with patch("app.store.random.choice", side_effect=lambda choices: choices[0]):
+            self.assertEqual(self.store.pick_next("standup").id, standup_user.id)
+
+        self.assertEqual([user.id for user in self.store.get_state("review").users], [review_user.id])
+        self.assertTrue(review_user.pickedThisRound is False)
+        self.assertEqual(self.store.get_state("standup").pool_id, "standup")
+
 
 class RoomStoreTests(unittest.TestCase):
     def test_each_room_has_an_empty_and_isolated_picker_state(self):
@@ -124,3 +145,11 @@ class RoomStoreTests(unittest.TestCase):
 
         self.assertIsNone(rooms.get_room("missing"))
         self.assertIsNone(rooms.get_state_store("missing"))
+
+    def test_new_room_has_a_default_pool_and_custom_pools(self):
+        rooms = RoomStore()
+        room = rooms.create_room("Engineering")
+        standup = rooms.create_pool(room.id, "Standup")
+
+        self.assertEqual([pool.id for pool in rooms.list_pools(room.id)], [DEFAULT_POOL_ID, standup.id])
+        self.assertEqual(rooms.list_pools("missing"), [])

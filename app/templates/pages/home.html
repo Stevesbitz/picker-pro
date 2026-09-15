@@ -1,0 +1,40 @@
+<section class="home-hero" aria-labelledby="home-title">
+  <div class="hero-copy">
+    <p class="eyebrow">Team picker</p>
+    <h2 id="home-title">Pick who goes next.</h2>
+    <p class="hero-description">Add your team, share the room, and pick someone at random.</p>
+    <div class="hero-mark" aria-hidden="true">
+      <span class="hero-mark-dot"></span>
+      <span class="hero-mark-line"></span>
+      <span class="hero-mark-dot hero-mark-dot-small"></span>
+    </div>
+  </div>
+
+  <div class="room-create-panel">
+    <div class="panel-heading">
+      <span class="panel-index">01</span>
+      <div>
+        <h3>Create a room</h3>
+        <p>Start a list for your team.</p>
+      </div>
+    </div>
+    <div class="add-row room-create-row">
+      <input type="text" id="newRoomInput" placeholder="Enter your team name..." maxlength="60" />
+      <button id="createRoomBtn" class="btn-primary">Create room <span aria-hidden="true">→</span></button>
+    </div>
+    <div id="status" class="status"></div>
+  </div>
+</section>
+
+<section class="home-steps" aria-label="How pickerPro works">
+  <div class="section-intro">
+    <p class="eyebrow">How it works</p>
+    <h3>Three quick steps.</h3>
+  </div>
+  <div class="step-list">
+    <div class="home-step"><span class="flow-number">01</span><strong>Create a room</strong><span>Make a list for your team.</span></div>
+    <div class="home-step"><span class="flow-number">02</span><strong>Share the link</strong><span>Send it to your teammates.</span></div>
+    <div class="home-step"><span class="flow-number">03</span><strong>Pick someone</strong><span>Let the app choose who’s next.</span></div>
+  </div>
+</section>
+<script src="/static/home.js" defer></script>

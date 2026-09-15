@@ -1,0 +1,13 @@
+<div class="card admin-login-card">
+  <h2>Admin Portal</h2>
+  <p>Enter your passkey to manage system sessions and team rosters.</p>
+  <form id="adminLoginForm">
+    <div class="add-row admin-login-row">
+      <input type="password" id="adminKeyInput" placeholder="Enter admin passkey..." required />
+      <button type="submit" id="adminLoginBtn" class="btn-primary">Authenticate</button>
+    </div>
+  </form>
+  <div id="adminAuthStatus" class="status"></div>
+  <div class="back-link"><a href="/">← Back to App</a></div>
+</div>
+<script src="/static/login.js" defer></script>

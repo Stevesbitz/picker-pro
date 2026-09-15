@@ -1,0 +1,48 @@
+<div class="admin-shell">
+  <div class="admin-heading">
+    <div><p class="eyebrow">Control room</p><h2>Keep the picker running smoothly.</h2><p>Monitor rooms, integrations, and the health of your workspace.</p></div>
+    <span class="admin-live"><span></span>Live monitoring</span>
+  </div>
+
+  <nav class="admin-nav" aria-label="Admin sections">
+    <button class="admin-nav-item active" data-section="overview">Overview</button>
+    <button class="admin-nav-item" data-section="rooms">Rooms</button>
+    <button class="admin-nav-item" data-section="integrations">Integrations</button>
+    <button class="admin-nav-item" data-section="health">System health</button>
+  </nav>
+
+  <section id="overview" class="admin-section active">
+    <div class="admin-grid">
+      <div class="admin-stat-card"><span class="admin-stat-icon">↗</span><div id="statTotalRooms" class="admin-stat-num">0</div><div class="admin-stat-label">Total rooms</div></div>
+      <div class="admin-stat-card"><span class="admin-stat-icon">◎</span><div id="statTotalUsers" class="admin-stat-num">0</div><div class="admin-stat-label">Total members</div></div>
+      <div class="admin-stat-card"><span class="admin-stat-icon">◷</span><div id="statActiveSessions" class="admin-stat-num">0</div><div class="admin-stat-label">Active sessions</div></div>
+    </div>
+    <div class="admin-callout"><strong>Workspace snapshot</strong><span>Room activity refreshes automatically while this page is open.</span></div>
+  </section>
+
+  <section id="rooms" class="admin-section">
+    <div class="admin-section-heading"><div><h3>Room directory</h3><p>Open a team room to review its roster and pools.</p></div></div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th>Room ID</th><th>Name</th><th>Users</th><th>Last pick</th><th>Action</th></tr></thead>
+        <tbody id="adminSessionsList"><tr><td colspan="5" class="empty-state">Loading room sessions...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="integrations" class="admin-section">
+    <div class="admin-section-heading"><div><h3>Integrations</h3><p>Check the services that connect pickerPro to your team.</p></div></div>
+    <div class="admin-status-list">
+      <div class="admin-status-row"><div><strong>Slack notifications</strong><span>Send selected users to configured channels.</span></div><span id="slackStatus" class="status-pill">Checking</span></div>
+    </div>
+  </section>
+
+  <section id="health" class="admin-section">
+    <div class="admin-section-heading"><div><h3>System health</h3><p>Current runtime configuration for this instance.</p></div></div>
+    <div class="admin-status-list">
+      <div class="admin-status-row"><div><strong>Storage backend</strong><span>Room and picker state persistence.</span></div><span id="storageStatus" class="status-pill">Checking</span></div>
+      <div class="admin-status-row"><div><strong>Database configuration</strong><span>Optional durable persistence connection.</span></div><span id="databaseStatus" class="status-pill">Checking</span></div>
+    </div>
+  </section>
+</div>
+<script src="/static/admin.js" defer></script>

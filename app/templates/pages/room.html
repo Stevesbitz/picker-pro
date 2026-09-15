@@ -1,0 +1,72 @@
+<section id="resultContainer" class="result-box empty" aria-live="polite">
+  <p class="result-kicker">Current selection</p>
+  <div id="resultName" class="result-name">Ready when you are</div>
+  <div id="resultTime" class="result-time"></div>
+</section>
+
+<section class="room-intro-row">
+  <div>
+    <p class="eyebrow">Team room</p>
+    <h2 class="room-page-title">Choose the next voice.</h2>
+    <p class="room-page-description">Keep the roster visible, stay fair, and move the conversation forward.</p>
+  </div>
+  <div class="room-pulse"><span></span>Live room</div>
+</section>
+
+<section class="card share-card">
+  <div class="section-heading compact-heading">
+    <div><strong>Invite your team</strong><p>Share this room so everyone sees the same roster.</p></div>
+  </div>
+  <div class="share-row">
+    <input id="shareLink" class="share-link" value="{{ request.url }}" readonly aria-label="Shareable room link" />
+    <button id="copyLinkBtn" class="btn-secondary">Copy</button>
+  </div>
+</section>
+
+<section class="card setup-card">
+  <div class="section-heading compact-heading">
+    <div><strong>Set the context</strong><p>Choose which kind of work you are assigning.</p></div>
+  </div>
+  <div class="pool-row">
+    <label for="poolSelect">Pool</label>
+    <select id="poolSelect" aria-label="Task pool"></select>
+    <input type="text" id="newPoolInput" placeholder="New pool name..." maxlength="40" />
+    <button id="addPoolBtn" class="btn-secondary">Add pool</button>
+  </div>
+  <div class="slack-channel-row">
+    <label for="slackChannelInput">Slack</label>
+    <input type="text" id="slackChannelInput" placeholder="e.g. C0123456789" maxlength="80" value="{{ room.slack_channel_id or '' }}" />
+    <button id="saveSlackChannelBtn" class="btn-secondary">Save channel</button>
+  </div>
+</section>
+
+<section class="card action-card">
+  <div class="controls-row">
+    <button id="pickBtn" class="btn-primary">Pick next person <span aria-hidden="true">→</span></button>
+    <button id="resetRoundBtn" class="btn-secondary">Reset round</button>
+    <button id="notifySlackBtn" class="btn-secondary" disabled>Send to Slack</button>
+  </div>
+  <div id="status" class="status"></div>
+</section>
+
+<section class="card roster-card">
+  <div class="section-heading roster-heading">
+    <div><strong>Your roster</strong><p>Check people in, or mark them OOO when they are away.</p></div>
+    <span id="rosterCount" class="roster-count"></span>
+  </div>
+  <div class="add-row roster-add-row">
+    <input type="text" id="newUserInput" placeholder="Add a teammate..." maxlength="60" />
+    <button id="addUserBtn" class="btn-primary">Add</button>
+  </div>
+  <ul id="userList" class="user-list"></ul>
+  <div id="emptyState" class="empty-state">Your roster is empty. Add a teammate to get started.</div>
+</section>
+
+<div id="thinkingModal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="spinner"></div>
+    <div class="modal-label">Selecting candidate...</div>
+    <div id="shufflingName" class="shuffling-name">...</div>
+  </div>
+</div>
+<script src="/static/room.js" defer></script>
