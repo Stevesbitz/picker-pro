@@ -8,6 +8,8 @@ class Room(BaseModel):
     name: str
     created_at: Optional[str] = None
     slack_channel_id: Optional[str] = None
+    whatsapp_phone: Optional[str] = None
+    sms_phone: Optional[str] = None
 
 
 class TaskPool(BaseModel):
@@ -26,6 +28,10 @@ class CreatePoolRequest(BaseModel):
 
 class UpdateSlackChannelRequest(BaseModel):
     channel_id: str = ""
+
+
+class UpdateNotificationDestinationRequest(BaseModel):
+    destination: str = ""
 
 
 class RoomResponse(Room):

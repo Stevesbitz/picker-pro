@@ -1,66 +1,91 @@
 <section id="resultContainer" class="result-box empty" aria-live="polite">
   <p class="result-kicker">Current selection</p>
   <div id="resultName" class="result-name">Ready when you are</div>
+  <div id="resultAnnouncement" class="result-announcement">Your selection will appear here.</div>
   <div id="resultTime" class="result-time"></div>
+  <button id="copyResultBtn" class="result-copy-btn" type="button" disabled hidden aria-label="Copy selection message">Copy</button>
 </section>
 
-<section class="room-intro-row">
-  <div>
-    <p class="eyebrow">Team room</p>
-    <h2 class="room-page-title">Choose the next voice.</h2>
-    <p class="room-page-description">Keep the roster visible, stay fair, and move the conversation forward.</p>
-  </div>
-  <div class="room-pulse"><span></span>Live room</div>
-</section>
+<div class="room-workspace">
+  <div class="room-primary-column">
+    <section class="card roster-card">
+      <div class="section-heading roster-heading">
+        <div><strong>Your roster</strong><p>Check people in, or mark them OOO when they are away.</p></div>
+        <span id="rosterCount" class="roster-count"></span>
+      </div>
+      <div class="add-row roster-add-row">
+        <input type="text" id="newUserInput" placeholder="Add a teammate..." maxlength="60" />
+        <button id="addUserBtn" class="btn-primary">Add</button>
+      </div>
+      <ul id="userList" class="user-list"></ul>
+      <div id="emptyState" class="empty-state">Your roster is empty. Add a teammate to get started.</div>
+    </section>
 
-<section class="card share-card">
-  <div class="section-heading compact-heading">
-    <div><strong>Invite your team</strong><p>Share this room so everyone sees the same roster.</p></div>
+    <section class="card action-card">
+      <div class="controls-row">
+        <button id="pickBtn" class="btn-primary">Pick next person <span aria-hidden="true">→</span></button>
+        <button id="resetRoundBtn" class="btn-secondary">Reset round</button>
+      </div>
+      <div id="status" class="status"></div>
+    </section>
   </div>
-  <div class="share-row">
-    <input id="shareLink" class="share-link" value="{{ request.url }}" readonly aria-label="Shareable room link" />
-    <button id="copyLinkBtn" class="btn-secondary">Copy</button>
-  </div>
-</section>
 
-<section class="card setup-card">
-  <div class="section-heading compact-heading">
-    <div><strong>Set the context</strong><p>Choose which kind of work you are assigning.</p></div>
-  </div>
-  <div class="pool-row">
-    <label for="poolSelect">Pool</label>
-    <select id="poolSelect" aria-label="Task pool"></select>
-    <input type="text" id="newPoolInput" placeholder="New pool name..." maxlength="40" />
-    <button id="addPoolBtn" class="btn-secondary">Add pool</button>
-  </div>
-  <div class="slack-channel-row">
-    <label for="slackChannelInput">Slack</label>
-    <input type="text" id="slackChannelInput" placeholder="e.g. C0123456789" maxlength="80" value="{{ room.slack_channel_id or '' }}" />
-    <button id="saveSlackChannelBtn" class="btn-secondary">Save channel</button>
-  </div>
-</section>
+  <aside class="room-secondary-column" aria-label="Room settings">
+    <section class="card setup-card">
+      <div class="section-heading compact-heading">
+        <div><strong>Task pool</strong><p>Choose what you are assigning.</p></div>
+      </div>
+      <div class="pool-row">
+        <label for="poolSelect">Pool</label>
+        <select id="poolSelect" aria-label="Task pool"></select>
+        <input type="text" id="newPoolInput" placeholder="New pool..." maxlength="40" />
+        <button id="addPoolBtn" class="btn-secondary">Add</button>
+      </div>
+    </section>
 
-<section class="card action-card">
-  <div class="controls-row">
-    <button id="pickBtn" class="btn-primary">Pick next person <span aria-hidden="true">→</span></button>
-    <button id="resetRoundBtn" class="btn-secondary">Reset round</button>
-    <button id="notifySlackBtn" class="btn-secondary" disabled>Send to Slack</button>
-  </div>
-  <div id="status" class="status"></div>
-</section>
+    <section class="card notify-card">
+      <div class="section-heading compact-heading">
+        <div><strong>Notify the team</strong><p>Save a destination, then send the latest pick.</p></div>
+      </div>
+      <div class="notification-destination">
+        <label for="slackChannelInput">Slack channel</label>
+        <div class="destination-row">
+          <input type="text" id="slackChannelInput" placeholder="e.g. C0123456789" maxlength="80" value="{{ room.slack_channel_id or '' }}" />
+          <button id="saveSlackChannelBtn" class="btn-secondary">Save</button>
+        </div>
+      </div>
+      <div class="notification-destination">
+        <label for="whatsappPhoneInput">WhatsApp number</label>
+        <div class="destination-row">
+          <input type="tel" id="whatsappPhoneInput" placeholder="e.g. +15551234567" maxlength="30" value="{{ room.whatsapp_phone or '' }}" />
+          <button id="saveWhatsappPhoneBtn" class="btn-secondary">Save</button>
+        </div>
+      </div>
+      <div class="notification-destination">
+        <label for="smsPhoneInput">SMS number</label>
+        <div class="destination-row">
+          <input type="tel" id="smsPhoneInput" placeholder="e.g. +15551234567" maxlength="30" value="{{ room.sms_phone or '' }}" />
+          <button id="saveSmsPhoneBtn" class="btn-secondary">Save</button>
+        </div>
+      </div>
+      <div class="notification-actions">
+        <button id="notifySlackBtn" class="btn-secondary" disabled>Slack</button>
+        <button id="notifyWhatsappBtn" class="btn-secondary" disabled>WhatsApp</button>
+        <button id="notifySmsBtn" class="btn-secondary" disabled>SMS</button>
+      </div>
+    </section>
 
-<section class="card roster-card">
-  <div class="section-heading roster-heading">
-    <div><strong>Your roster</strong><p>Check people in, or mark them OOO when they are away.</p></div>
-    <span id="rosterCount" class="roster-count"></span>
-  </div>
-  <div class="add-row roster-add-row">
-    <input type="text" id="newUserInput" placeholder="Add a teammate..." maxlength="60" />
-    <button id="addUserBtn" class="btn-primary">Add</button>
-  </div>
-  <ul id="userList" class="user-list"></ul>
-  <div id="emptyState" class="empty-state">Your roster is empty. Add a teammate to get started.</div>
-</section>
+    <section class="card share-card">
+      <div class="section-heading compact-heading">
+        <div><strong>Invite your team</strong><p>Share this room so everyone sees the same roster.</p></div>
+      </div>
+      <div class="share-row">
+        <input id="shareLink" class="share-link" value="{{ request.url }}" readonly aria-label="Shareable room link" />
+        <button id="copyLinkBtn" class="btn-secondary">Copy</button>
+      </div>
+    </section>
+  </aside>
+</div>
 
 <div id="thinkingModal" class="modal-overlay">
   <div class="modal-card">

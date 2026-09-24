@@ -8,7 +8,7 @@ from functools import wraps
 from threading import Lock, RLock
 from typing import Dict, List, Optional
 
-from sqlalchemy import Boolean, Column, ForeignKey, String, create_engine
+from sqlalchemy import Boolean, Column, ForeignKey, String, create_engine, inspect, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.schemas.rooms import AdminDashboardData, AdminRoomSummary, Room, TaskPool
@@ -38,6 +38,8 @@ class DbRoom(BaseDB):
     name = Column(String, nullable=False)
     created_at = Column(String, nullable=False)
     slack_channel_id = Column(String, nullable=True)
+    whatsapp_phone = Column(String, nullable=True)
+    sms_phone = Column(String, nullable=True)
 
 
 class DbPool(BaseDB):
@@ -220,9 +222,19 @@ class DatabaseRoomStore(BaseRoomStore):
 
         self.engine = create_engine(self.database_url, future=True)
         BaseDB.metadata.create_all(self.engine)
+        self._ensure_notification_columns()
         self._session_factory = sessionmaker(bind=self.engine, autoflush=False, expire_on_commit=False)
         self._locks: Dict[str, RLock] = {}
         self._locks_lock = Lock()
+
+    def _ensure_notification_columns(self):
+        columns = {column["name"] for column in inspect(self.engine).get_columns("rooms")}
+        missing = {"whatsapp_phone", "sms_phone"} - columns
+        if not missing:
+            return
+        with self.engine.begin() as connection:
+            for column in sorted(missing):
+                connection.execute(text(f"ALTER TABLE rooms ADD COLUMN {column} VARCHAR"))
 
     def _lock_for_room(self, room_id: str) -> RLock:
         with self._locks_lock:
@@ -250,7 +262,7 @@ class DatabaseRoomStore(BaseRoomStore):
             row = session.query(DbRoom).filter(DbRoom.id == room_id).one_or_none()
             if not row:
                 return None
-            return Room(id=row.id, name=row.name, created_at=row.created_at, slack_channel_id=row.slack_channel_id)
+            return Room(id=row.id, name=row.name, created_at=row.created_at, slack_channel_id=row.slack_channel_id, whatsapp_phone=row.whatsapp_phone, sms_phone=row.sms_phone)
         finally:
             session.close()
 
@@ -263,6 +275,8 @@ class DatabaseRoomStore(BaseRoomStore):
             else:
                 existing.name = room.name
                 existing.slack_channel_id = room.slack_channel_id
+                existing.whatsapp_phone = room.whatsapp_phone
+                existing.sms_phone = room.sms_phone
                 if room.created_at:
                     existing.created_at = room.created_at
             session.commit()
@@ -288,7 +302,7 @@ class DatabaseRoomStore(BaseRoomStore):
         session: Session = self._session_factory()
         try:
             rows = session.query(DbRoom).all()
-            return [Room(id=row.id, name=row.name, created_at=row.created_at, slack_channel_id=row.slack_channel_id) for row in rows]
+            return [Room(id=row.id, name=row.name, created_at=row.created_at, slack_channel_id=row.slack_channel_id, whatsapp_phone=row.whatsapp_phone, sms_phone=row.sms_phone) for row in rows]
         finally:
             session.close()
 
