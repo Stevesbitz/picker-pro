@@ -8,6 +8,7 @@ pickerPro is a FastAPI-based round-robin picker app for creating shareable team 
 - Task-specific pools such as Standup, Code Review, and On-Call
 - Out-of-office status that excludes unavailable users from picks
 - Optional Slack notifications for the selected task assignee
+- Optional WhatsApp and SMS notifications through Twilio
 - Isolated team rooms with unique room URLs
 - Thread-safe in-memory state management with optional SQLAlchemy persistence
 - Admin dashboard access for session visibility
@@ -50,6 +51,19 @@ export SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
 When both configurations are present, the Web API configuration takes precedence. Slack credentials are read only by the server and are never sent to the browser.
 
 Each room can override the default channel by entering a Slack channel ID below the task-pool controls and saving it. This value is stored with the room and is used for that room’s notifications. If a room has no channel ID, `SLACK_CHANNEL_ID` is used.
+
+### WhatsApp and SMS configuration
+
+WhatsApp and SMS use the Twilio Messages API. Configure the shared Twilio credentials and one sender for each channel:
+
+```bash
+export TWILIO_ACCOUNT_SID=ACyour-account-sid
+export TWILIO_AUTH_TOKEN=your-auth-token
+export WHATSAPP_FROM_NUMBER=whatsapp:+14155238886
+export SMS_FROM_NUMBER=+15550000000
+```
+
+Room destinations should use international E.164 phone numbers, for example `+15551234567`. WhatsApp destinations are automatically sent with the `whatsapp:` prefix. The Twilio WhatsApp sender must be enabled for the account, and SMS sender requirements depend on the destination country.
 
 ## Current project structure
 
@@ -177,6 +191,10 @@ Then open:
 | `POST` | `/api/rooms/{room_id}/reset?pool_id=...` | Reset the current round |
 | `POST` | `/api/rooms/{room_id}/notify-slack?pool_id=...` | Notify Slack about the selected user |
 | `PATCH` | `/api/rooms/{room_id}/slack-channel` | Save or clear the room Slack channel ID |
+| `POST` | `/api/rooms/{room_id}/notify-whatsapp?pool_id=...` | Notify WhatsApp about the selected user |
+| `PATCH` | `/api/rooms/{room_id}/whatsapp-phone` | Save or clear the room WhatsApp destination |
+| `POST` | `/api/rooms/{room_id}/notify-sms?pool_id=...` | Notify SMS about the selected user |
+| `PATCH` | `/api/rooms/{room_id}/sms-phone` | Save or clear the room SMS destination |
 
 The room UI enables **Notify Slack** after a user has been selected. The notification uses the selected pool’s last-picked user and can be sent again when needed. If Slack is not configured, the rest of the picker remains available and the notification returns `503`.
 

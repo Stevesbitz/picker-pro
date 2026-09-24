@@ -11,10 +11,11 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from app.schemas.rooms import AdminDashboardData, CreatePoolRequest, CreateRoomRequest, Room, RoomResponse, TaskPool, UpdateSlackChannelRequest
+from app.schemas.rooms import AdminDashboardData, CreatePoolRequest, CreateRoomRequest, Room, RoomResponse, TaskPool, UpdateNotificationDestinationRequest, UpdateSlackChannelRequest
 from app.schemas.users import CreateUserRequest, StateResponse, ToggleOOORequest, ToggleUserRequest, User
 from app.services.rooms import RoomService
 from app.services.slack import SlackNotifier, SlackNotifierError
+from app.services.notifications import NotificationError, SmsNotifier, WhatsAppNotifier
 from app.store import room_store
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -27,6 +28,14 @@ def get_room_service() -> RoomService:
 
 def get_slack_notifier(channel_id: Optional[str] = None) -> SlackNotifier:
     return SlackNotifier(channel_id=channel_id)
+
+
+def get_whatsapp_notifier() -> WhatsAppNotifier:
+    return WhatsAppNotifier()
+
+
+def get_sms_notifier() -> SmsNotifier:
+    return SmsNotifier()
 
 app = FastAPI(
     title="pickerPro®",
@@ -129,7 +138,7 @@ def read_root(request: Request):
         name="index.html",
         context={
             "room": None,
-            "is_admin": is_authenticated_admin(request),
+            "is_admin": False,
             "is_login_page": False,
         },
     )
@@ -175,7 +184,7 @@ def read_room(request: Request, room_id: str):
         name="index.html",
         context={
             "room": room,
-            "is_admin": is_authenticated_admin(request),
+            "is_admin": False,
             "is_login_page": False,
         },
     )
@@ -219,6 +228,8 @@ def get_admin_system_status(request: Request):
         "storage_backend": type(room_store).__name__,
         "database_configured": bool(os.getenv("DATABASE_URL")),
         "slack_configured": get_slack_notifier().is_configured,
+        "whatsapp_configured": get_whatsapp_notifier().is_configured,
+        "sms_configured": get_sms_notifier().is_configured,
     }
 
 
@@ -258,6 +269,25 @@ def update_slack_channel(room_id: str, payload: UpdateSlackChannelRequest):
         raise HTTPException(status_code=404, detail="Room not found")
     room.slack_channel_id = payload.channel_id.strip() or None
     return service.save_room(room)
+
+
+def update_notification_destination(room_id: str, channel: str, payload: UpdateNotificationDestinationRequest):
+    service = get_room_service()
+    room = service.get_room(room_id)
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    setattr(room, f"{channel}_phone", payload.destination.strip() or None)
+    return service.save_room(room)
+
+
+@app.patch("/api/rooms/{room_id}/whatsapp-phone", response_model=Room)
+def update_whatsapp_phone(room_id: str, payload: UpdateNotificationDestinationRequest):
+    return update_notification_destination(room_id, "whatsapp", payload)
+
+
+@app.patch("/api/rooms/{room_id}/sms-phone", response_model=Room)
+def update_sms_phone(room_id: str, payload: UpdateNotificationDestinationRequest):
+    return update_notification_destination(room_id, "sms", payload)
 
 
 @app.get("/api/rooms/{room_id}/state", response_model=StateResponse)
@@ -349,4 +379,37 @@ def notify_slack(room_id: str, pool_id: Optional[str] = None):
     except SlackNotifierError as error:
         raise HTTPException(status_code=502, detail=str(error)) from error
     return {"status": "sent", "user": state.last_picked_user.name, "pool": pool.name}
+
+
+def notify_twilio_channel(room_id: str, channel: str, pool_id: Optional[str] = None):
+    state_store = get_room_state_or_404(room_id)
+    state = state_store.get_state(pool_id) if pool_id else state_store.get_state()
+    if not state.last_picked_user:
+        raise HTTPException(status_code=404, detail="No selected user to notify")
+
+    pools = get_room_service().list_pools(room_id)
+    pool = next((item for item in pools if item.id == (pool_id or "default")), None)
+    room = get_room_service().get_room(room_id)
+    if not pool or not room:
+        raise HTTPException(status_code=404, detail="Task pool or room not found")
+
+    destination = getattr(room, f"{channel}_phone")
+    notifier = get_whatsapp_notifier() if channel == "whatsapp" else get_sms_notifier()
+    if not notifier.is_configured or not destination:
+        raise HTTPException(status_code=503, detail=f"{channel.title()} notifications are not configured")
+    try:
+        notifier.send_assignment(state.last_picked_user, room.name, pool.name, destination)
+    except NotificationError as error:
+        raise HTTPException(status_code=502, detail=str(error)) from error
+    return {"status": "sent", "user": state.last_picked_user.name, "pool": pool.name}
+
+
+@app.post("/api/rooms/{room_id}/notify-whatsapp")
+def notify_whatsapp(room_id: str, pool_id: Optional[str] = None):
+    return notify_twilio_channel(room_id, "whatsapp", pool_id)
+
+
+@app.post("/api/rooms/{room_id}/notify-sms")
+def notify_sms(room_id: str, pool_id: Optional[str] = None):
+    return notify_twilio_channel(room_id, "sms", pool_id)
 

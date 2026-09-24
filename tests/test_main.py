@@ -57,6 +57,47 @@ class ApiHandlerTests(unittest.TestCase):
         self.assertIn(b"Page not found", response.body)
         self.assertIn(b"Return home", response.body)
 
+    def test_authenticated_root_still_renders_the_public_homepage(self):
+        request = Request(
+            {
+                "type": "http",
+                "method": "GET",
+                "scheme": "http",
+                "path": "/",
+                "raw_path": b"/",
+                "query_string": b"",
+                "headers": [(b"cookie", f"{main.ADMIN_COOKIE_KEY}={main.ADMIN_PASSKEY}".encode())],
+                "server": ("testserver", 80),
+            }
+        )
+
+        response = main.read_root(request)
+
+        self.assertFalse(response.context["is_admin"])
+        self.assertFalse(response.context["is_login_page"])
+
+    def test_authenticated_room_url_renders_the_picker_room(self):
+        request = Request(
+            {
+                "type": "http",
+                "method": "GET",
+                "scheme": "http",
+                "path": f"/rooms/{ROOM_ID}",
+                "raw_path": f"/rooms/{ROOM_ID}".encode(),
+                "query_string": b"",
+                "headers": [(b"cookie", f"{main.ADMIN_COOKIE_KEY}={main.ADMIN_PASSKEY}".encode())],
+                "server": ("testserver", 80),
+            }
+        )
+        room = Room(id=ROOM_ID, name="Engineering")
+
+        with patch("app.main.get_room_service") as get_service:
+            get_service.return_value.get_room.return_value = room
+            response = main.read_room(request, ROOM_ID)
+
+        self.assertFalse(response.context["is_admin"])
+        self.assertEqual(response.context["room"], room)
+
     def test_api_404_remains_a_json_error(self):
         response = asyncio.run(
             main.http_exception_handler(

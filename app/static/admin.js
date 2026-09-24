@@ -5,6 +5,8 @@
   const totalUsers = document.getElementById('statTotalUsers');
   const activeSessions = document.getElementById('statActiveSessions');
   const slackStatus = document.getElementById('slackStatus');
+  const whatsappStatus = document.getElementById('whatsappStatus');
+  const smsStatus = document.getElementById('smsStatus');
   const storageStatus = document.getElementById('storageStatus');
   const databaseStatus = document.getElementById('databaseStatus');
 
@@ -56,6 +58,10 @@
       const data = await response.json();
       slackStatus.textContent = data.slack_configured ? 'Connected' : 'Not configured';
       slackStatus.className = `status-pill ${data.slack_configured ? 'status-good' : 'status-neutral'}`;
+      whatsappStatus.textContent = data.whatsapp_configured ? 'Connected' : 'Not configured';
+      whatsappStatus.className = `status-pill ${data.whatsapp_configured ? 'status-good' : 'status-neutral'}`;
+      smsStatus.textContent = data.sms_configured ? 'Connected' : 'Not configured';
+      smsStatus.className = `status-pill ${data.sms_configured ? 'status-good' : 'status-neutral'}`;
       storageStatus.textContent = data.storage_backend.replace('RoomStore', ' storage').replace('Memory', 'Memory');
       storageStatus.className = 'status-pill status-good';
       databaseStatus.textContent = data.database_configured ? 'Configured' : 'In-memory mode';

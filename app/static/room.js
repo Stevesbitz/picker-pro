@@ -15,9 +15,13 @@
   const status = document.getElementById('status');
   const pickButton = document.getElementById('pickBtn');
   const notifySlackButton = document.getElementById('notifySlackBtn');
+  const notifyWhatsappButton = document.getElementById('notifyWhatsappBtn');
+  const notifySmsButton = document.getElementById('notifySmsBtn');
   const resultContainer = document.getElementById('resultContainer');
   const resultName = document.getElementById('resultName');
+  const resultAnnouncement = document.getElementById('resultAnnouncement');
   const resultTime = document.getElementById('resultTime');
+  const copyResultButton = document.getElementById('copyResultBtn');
   const modal = document.getElementById('thinkingModal');
   const shufflingName = document.getElementById('shufflingName');
   const poolSelect = document.getElementById('poolSelect');
@@ -25,6 +29,10 @@
   const rosterCount = document.getElementById('rosterCount');
   const slackChannelInput = document.getElementById('slackChannelInput');
   const saveSlackChannelButton = document.getElementById('saveSlackChannelBtn');
+  const whatsappPhoneInput = document.getElementById('whatsappPhoneInput');
+  const smsPhoneInput = document.getElementById('smsPhoneInput');
+  const saveWhatsappPhoneButton = document.getElementById('saveWhatsappPhoneBtn');
+  const saveSmsPhoneButton = document.getElementById('saveSmsPhoneBtn');
 
   async function request(path, options) {
     const response = await fetch(api(path), options);
@@ -60,16 +68,27 @@
   function render(state) {
     const { users, last_picked_user: lastPickedUser } = state;
     if (lastPickedUser) {
+      const poolName = poolSelect.options[poolSelect.selectedIndex]?.textContent || 'the selected';
       resultName.textContent = lastPickedUser.name;
+      resultAnnouncement.textContent = `${lastPickedUser.name} has been selected to perform ${poolName}.`;
       resultTime.textContent = `Picked on ${new Date(lastPickedUser.picked_at).toLocaleString()}`;
       resultTime.style.display = 'block';
+      copyResultButton.disabled = false;
+      copyResultButton.hidden = false;
       resultContainer.classList.remove('empty');
       notifySlackButton.disabled = false;
+      notifyWhatsappButton.disabled = false;
+      notifySmsButton.disabled = false;
     } else {
       resultName.textContent = 'No one picked yet';
+      resultAnnouncement.textContent = 'Your selection will appear here.';
       resultTime.style.display = 'none';
+      copyResultButton.disabled = true;
+      copyResultButton.hidden = true;
       resultContainer.classList.add('empty');
       notifySlackButton.disabled = true;
+      notifyWhatsappButton.disabled = true;
+      notifySmsButton.disabled = true;
     }
 
     userList.innerHTML = '';
@@ -201,6 +220,36 @@
     }
   }
 
+  async function savePhone(button, input, endpoint, label) {
+    button.disabled = true;
+    try {
+      await request(endpoint, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ destination: input.value.trim() })
+      });
+      status.textContent = input.value.trim() ? `${label} number saved.` : `${label} number cleared.`;
+    } catch (error) {
+      window.showErrorToast(error, `Unable to save the ${label} number. Please try again.`);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function notify(channel, button, label) {
+    button.disabled = true;
+    try {
+      await request(withPool(`/notify-${channel}`), { method: 'POST' });
+      status.textContent = `${label} notification sent.`;
+    } catch (error) {
+      status.textContent = error.message.includes('503')
+        ? `${label} notifications are not configured.`
+        : `Unable to send the ${label} notification.`;
+      window.showErrorToast(error, status.textContent);
+      button.disabled = false;
+    }
+  }
+
   document.getElementById('addUserBtn').addEventListener('click', addUser);
   newUserInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') addUser(); });
   pickButton.addEventListener('click', pickUser);
@@ -223,16 +272,29 @@
       notifySlackButton.disabled = false;
     }
   });
+  notifyWhatsappButton.addEventListener('click', () => notify('whatsapp', notifyWhatsappButton, 'WhatsApp'));
+  notifySmsButton.addEventListener('click', () => notify('sms', notifySmsButton, 'SMS'));
   document.getElementById('copyLinkBtn').addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(document.getElementById('shareLink').value);
       document.getElementById('copyLinkBtn').textContent = 'Copied';
     } catch (error) { window.showErrorToast(error, 'Unable to copy the room link. Please try again.'); }
   });
+  copyResultButton.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(resultAnnouncement.textContent);
+      copyResultButton.textContent = 'Copied';
+      setTimeout(() => { copyResultButton.textContent = 'Copy'; }, 1600);
+    } catch (error) {
+      window.showErrorToast(error, 'Unable to copy the selection message.');
+    }
+  });
   poolSelect.addEventListener('change', () => { activePoolId = poolSelect.value; fetchState(); });
   document.getElementById('addPoolBtn').addEventListener('click', addPool);
   newPoolInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') addPool(); });
   saveSlackChannelButton.addEventListener('click', saveSlackChannel);
+  saveWhatsappPhoneButton.addEventListener('click', () => savePhone(saveWhatsappPhoneButton, whatsappPhoneInput, '/whatsapp-phone', 'WhatsApp'));
+  saveSmsPhoneButton.addEventListener('click', () => savePhone(saveSmsPhoneButton, smsPhoneInput, '/sms-phone', 'SMS'));
 
   fetchPools().then(fetchState).catch((error) => { status.textContent = 'Unable to load task pools.'; console.error(error); });
   setInterval(fetchState, 2500);
